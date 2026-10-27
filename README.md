@@ -3,7 +3,7 @@
 
 **A Mac menu bar app that warns you before Google Calendar meetings**
 
-Status: Design under review
+Status: In development
 
 ## What it does
 

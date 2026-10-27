@@ -8,6 +8,6 @@ Status: **draft** (UX not approved yet), **approved**, **building** (a ticket fo
 
 | ID | Screen | Status | Purpose | Tickets | Updated |
 | --- | --- | --- | --- | --- | --- |
-| S01 | [Menu bar menu](screens/S01-menu-bar-menu/screen.html) (+3 states) · [spec](screens/S01-menu-bar-menu/spec.md) | approved | Check that Nudge is working, see what's next, and fix problems | none yet | 2026-10-27 |
-| S02 | [Full-screen warning](screens/S02-full-screen-warning/screen.html) · [spec](screens/S02-full-screen-warning/spec.md) | approved | Make it impossible to miss that a meeting starts in one minute | none yet | 2026-10-27 |
-| S03 | [Five-minute banner](screens/S03-five-minute-banner/screen.html) · [spec](screens/S03-five-minute-banner/spec.md) | approved | Early heads-up with sound, 5 minutes before a meeting | none yet | 2026-10-27 |
+| S01 | [Menu bar menu](screens/S01-menu-bar-menu/screen.html) (+3 states) · [spec](screens/S01-menu-bar-menu/spec.md) | building | Check that Nudge is working, see what's next, and fix problems | T-6, T-8, T-9, T-11 | 2026-10-27 |
+| S02 | [Full-screen warning](screens/S02-full-screen-warning/screen.html) · [spec](screens/S02-full-screen-warning/spec.md) | building | Make it impossible to miss that a meeting starts in one minute | T-6, T-10, T-11 | 2026-10-27 |
+| S03 | [Five-minute banner](screens/S03-five-minute-banner/screen.html) · [spec](screens/S03-five-minute-banner/spec.md) | building | Early heads-up with sound, 5 minutes before a meeting | T-6, T-9, T-11 | 2026-10-27 |

@@ -29,6 +29,8 @@ Problem: People miss meetings even with Google Calendar alerts enabled because t
 - One ticket at a time, on its own branch (`dmi/t-<n>`), cut from `develop`. Small, focused changes.
 - Each ticket becomes a pull request into `develop` that the maintainer reviews. Keep the diff small enough to read in one sitting.
 - Prefer boring, proven tools. Don't add a dependency unless the ticket needs it.
+- Keep platform-specific code thin and put logic in pure code with unit tests (aim for about 90% coverage). Code
+  that can't run in the sandbox is verified by review plus those tests, and then by hand by the maintainer.
 - Write tests for what you build, and run them before you say you're done. Document the build and test commands in the README under "Development".
 - Never commit secrets, tokens or personal data. Don't put real credentials in examples.
 - If the ticket is unclear or the design is missing something, ask the architect or designer instead of guessing.

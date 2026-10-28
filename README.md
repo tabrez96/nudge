@@ -57,6 +57,20 @@ Layout:
 - `Sources/Nudge` — the macOS app shell (AppKit/EventKit), compiled only on macOS.
 - `Tests/NudgeCoreTests` — XCTest tests for `NudgeCore`.
 
+### Mac setup
+
+1. Add your Google account in System Settings → Internet Accounts and turn on Calendars. Wait for its calendars to show up in the Calendar app. Nudge reads them through macOS and never asks for a Google password.
+2. On first launch, macOS asks for calendar access. If you said no, turn it on in System Settings → Privacy & Security → Calendars.
+
+### Build the app
+
+```sh
+scripts/make-app.sh
+open build/Nudge.app
+```
+
+The script builds in release mode, copies the binary and `Support/Info.plist` into `build/Nudge.app`, and ad-hoc signs the bundle (`codesign --sign -`), so it only runs on the Mac that built it. The app has no Dock icon and lives in the menu bar. Until the menu and alert screens land, alerts only show up in Console.app (search for "Nudge alert").
+
 ---
 
 <sub>Created with ❤️ by Dunder Mifflin agents</sub>

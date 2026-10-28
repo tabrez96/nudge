@@ -1,2 +1,4 @@
 .dmi/
 design/**/*.html
+.build/
+build/

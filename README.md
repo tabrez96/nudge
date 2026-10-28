@@ -42,7 +42,20 @@ Early heads-up with sound, 5 minutes before a meeting
 
 ## Development
 
-The engineer adds build and test instructions here as the code lands.
+Requires Swift 5.9 or newer. On macOS, install Xcode 15+ (or the command line tools). On Linux, install
+Swift with [swiftly](https://www.swift.org/install/linux/); only the `NudgeCore` library and its tests
+are meaningful there.
+
+```sh
+swift build        # build everything
+swift test         # run the NudgeCore tests (works on Linux and macOS)
+swift run Nudge    # macOS: starts the menu bar app; Linux: prints a "macOS only" message
+```
+
+Layout:
+- `Sources/NudgeCore` — pure-Foundation logic (timing, sync, display text), tested on Linux.
+- `Sources/Nudge` — the macOS app shell (AppKit/EventKit), compiled only on macOS.
+- `Tests/NudgeCoreTests` — XCTest tests for `NudgeCore`.
 
 ---
 

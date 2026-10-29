@@ -16,6 +16,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     private let defaults: UserDefaults
     private var tickTimer: Timer?
     private var refreshTimer: Timer?
+    private var menuController: MenuController?
 
     init(defaults: UserDefaults = .standard) {
         self.defaults = defaults
@@ -25,6 +26,9 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     }
 
     func applicationDidFinishLaunching(_ notification: Notification) {
+        let menu = MenuController(app: self)
+        menuController = menu
+        syncObserver = menu
         coordinator.onStatusChange = { [weak self] _ in
             guard let self else { return }
             self.syncObserver.syncDidChange(self.coordinator)
@@ -78,6 +82,34 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     /// Used by the S01 "Allow calendar access…" row.
     func requestCalendarAccess() {
         source.requestAccess { [weak self] _ in self?.refresh() }
+    }
+
+    /// Used by the S01 "Allow calendar access…" row.
+    func fixCalendarAccess() {
+        switch AccessFix.forAccess(source.authorization()) {
+        case .askSystem: requestCalendarAccess()
+        case .openPrivacySettings:
+            openSettings("x-apple.systempreferences:com.apple.preference.security?Privacy_Calendars")
+        case .refresh: refresh()
+        }
+    }
+
+    /// Used by the S01 "Add Google account in Internet Accounts…" row.
+    func openInternetAccounts() {
+        if !openSettings("x-apple.systempreferences:com.apple.Internet-Accounts-Settings.extension") {
+            NSWorkspace.shared.open(URL(fileURLWithPath: "/System/Library/PreferencePanes/InternetAccounts.prefPane"))
+        }
+    }
+
+    /// Stub for the S01 "Test the alerts" row until the test-alerts ticket.
+    func testAlerts() {
+        NSLog("Nudge: Test the alerts is not built yet")
+    }
+
+    @discardableResult
+    private func openSettings(_ url: String) -> Bool {
+        guard let url = URL(string: url) else { return false }
+        return NSWorkspace.shared.open(url)
     }
 
     /// Used by the S01 Calendar submenu. Only a user's pick is saved, never the automatic fallback.

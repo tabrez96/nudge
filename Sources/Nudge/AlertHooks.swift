@@ -10,7 +10,7 @@ protocol AlertPresenting: AnyObject {
     func tick(now: Date)
 }
 
-/// Shows sync state. Implemented by the S01 menu controller in a later ticket.
+/// Shows sync state. Implemented by the S01 menu controller.
 protocol SyncObserving: AnyObject {
     func syncDidChange(_ coordinator: SyncCoordinator)
 }
@@ -24,7 +24,7 @@ final class LoggingAlertPresenter: AlertPresenting {
     func tick(now: Date) {}
 }
 
-/// Placeholder until S01 exists: logs status changes.
+/// Fallback used before the menu controller is installed.
 final class LoggingSyncObserver: SyncObserving {
     func syncDidChange(_ coordinator: SyncCoordinator) {
         NSLog("Nudge sync status: %@", "\(coordinator.status)")

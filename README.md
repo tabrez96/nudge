@@ -69,7 +69,7 @@ scripts/make-app.sh
 open build/Nudge.app
 ```
 
-The script builds in release mode, copies the binary and `Support/Info.plist` into `build/Nudge.app`, and ad-hoc signs the bundle (`codesign --sign -`), so it only runs on the Mac that built it. The app has no Dock icon and lives in the menu bar. Until the menu and alert screens land, alerts only show up in Console.app (search for "Nudge alert").
+The script builds in release mode, copies the binary and `Support/Info.plist` into `build/Nudge.app`, and ad-hoc signs the bundle (`codesign --sign -`), so it only runs on the Mac that built it. The app has no Dock icon and lives in the menu bar. Click the bell in the menu bar to see sync status and your next meetings. Until the alert screens land, alerts only show up in Console.app (search for "Nudge alert").
 
 ---
 

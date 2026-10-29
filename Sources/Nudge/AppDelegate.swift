@@ -12,6 +12,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     let coordinator: SyncCoordinator
     let ticker = AlertTicker()
     let notifier = Notifier()
+    let fullScreen = FullScreenAlertController()
     var alertPresenters: [AlertPresenting] = [LoggingAlertPresenter()]
     var syncObserver: SyncObserving = LoggingSyncObserver()
     private let defaults: UserDefaults
@@ -31,6 +32,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         menuController = menu
         syncObserver = menu
         alertPresenters.append(notifier)
+        alertPresenters.append(fullScreen)
         notifier.onAccessChange = { [weak menu] access in menu?.notificationAccessDidChange(access) }
         notifier.start()
         coordinator.onStatusChange = { [weak self] _ in

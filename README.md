@@ -70,7 +70,15 @@ scripts/make-app.sh
 open build/Nudge.app
 ```
 
-The script builds in release mode, copies the binary and `Support/Info.plist` into `build/Nudge.app`, and ad-hoc signs the bundle (`codesign --sign -`), so it only runs on the Mac that built it. The app has no Dock icon and lives in the menu bar. Click the bell in the menu bar to see sync status and your next meetings. Five minutes before a meeting Nudge plays the Glass sound and posts a banner. The one-minute full-screen warning is not built yet; it only shows up in Console.app (search for "Nudge alert"). Run the bundled app for banners: `swift run Nudge` has no app bundle, so it plays the sound only.
+The script builds in release mode, copies the binary and `Support/Info.plist` into `build/Nudge.app`, and ad-hoc signs the bundle (`codesign --sign -`), so it only runs on the Mac that built it. The app has no Dock icon and lives in the menu bar. Click the bell in the menu bar to see sync status and your next meetings. Five minutes before a meeting Nudge plays the Glass sound and posts a banner. One minute before, a red full-screen warning with a countdown covers every screen, including full-screen apps and other Spaces; Got it, Return or Esc closes it everywhere. Alerts are also logged to Console.app (search for "Nudge alert"). Run the bundled app for banners: `swift run Nudge` has no app bundle, so it plays the sound only.
+
+### Check the full-screen warning by hand
+
+1. With two displays connected and an app in full screen on one of them, create a meeting starting in 3 minutes with a location, and another 3 minutes later with no location.
+2. At one minute before the first: every screen turns red, "Got it" has a yellow ring, the countdown runs 1:00 → 0:01, then shows "Starting now" (the "STARTING IN" line disappears) and stays.
+3. Press Esc: all screens close. Repeat with Return and with clicking Got it on the second display.
+4. Leave the first warning open: when the second fires it replaces it and shows only the time range.
+5. With VoiceOver on (⌘F5), the warning is read once when it opens, not every second.
 
 ---
 

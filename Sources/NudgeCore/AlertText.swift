@@ -30,6 +30,29 @@ public enum AlertText {
         withLocation(timeRange(for: meeting, calendar: calendar), meeting)
     }
 
+    /// S02 VoiceOver text, spoken once at open: "Weekly team sync starts in 1 minute. 2:00 PM to 2:30 PM, Conference Room B."
+    /// Spelled out because VoiceOver reads "1:00" as a clock time and "·" as a symbol.
+    public static func fullScreenAnnouncement(for meeting: Meeting, now: Date, calendar: Calendar = .current) -> String {
+        let seconds = Int(meeting.start.timeIntervalSince(now).rounded(.up))
+        let when: String
+        if seconds <= 0 {
+            when = "is starting now"
+        } else if seconds >= 60 {
+            when = "starts in " + plural(seconds / 60, "minute")
+        } else {
+            when = "starts in " + plural(seconds, "second")
+        }
+        var range = TimeText.clock(meeting.start, calendar: calendar) + " to " + TimeText.clock(meeting.end, calendar: calendar)
+        if let location = meeting.location?.trimmingCharacters(in: .whitespacesAndNewlines), !location.isEmpty {
+            range += ", " + location
+        }
+        return "\(meeting.title) \(when). \(range)."
+    }
+
+    private static func plural(_ n: Int, _ unit: String) -> String {
+        "\(n) \(unit)" + (n == 1 ? "" : "s")
+    }
+
     private static func withLocation(_ text: String, _ meeting: Meeting) -> String {
         guard let location = meeting.location?.trimmingCharacters(in: .whitespacesAndNewlines),
               !location.isEmpty else { return text }

@@ -20,8 +20,8 @@ final class MenuController: NSObject, NSMenuDelegate, SyncObserving {
     private var shownIcon: MenuIcon = .normal
     private var shownDot: StatusDot = .green
     private var isOpen = false
-    /// Set by the S03 notifier ticket; true until then.
-    var notificationsAllowed = true
+    /// False while notifications are off for Nudge; drives the S01 warning row.
+    private(set) var notificationsAllowed = true
 
     init(app: AppDelegate) {
         self.app = app
@@ -53,7 +53,16 @@ final class MenuController: NSObject, NSMenuDelegate, SyncObserving {
         rebuild(menu, from: model)
     }
 
-    func menuWillOpen(_ menu: NSMenu) { isOpen = true }
+    func notificationAccessDidChange(_ access: NotificationAccess) {
+        guard access.notificationsAllowed != notificationsAllowed else { return }
+        notificationsAllowed = access.notificationsAllowed
+        if isOpen { rebuild(menu, from: currentModel()) }
+    }
+
+    func menuWillOpen(_ menu: NSMenu) {
+        isOpen = true
+        app.refreshNotificationAccess()
+    }
 
     func menuDidClose(_ menu: NSMenu) { isOpen = false }
 

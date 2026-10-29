@@ -11,7 +11,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     let source = EventKitSource()
     let coordinator: SyncCoordinator
     let ticker = AlertTicker()
-    var alertPresenter: AlertPresenting = LoggingAlertPresenter()
+    let notifier = Notifier()
+    var alertPresenters: [AlertPresenting] = [LoggingAlertPresenter()]
     var syncObserver: SyncObserving = LoggingSyncObserver()
     private let defaults: UserDefaults
     private var tickTimer: Timer?
@@ -29,6 +30,9 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         let menu = MenuController(app: self)
         menuController = menu
         syncObserver = menu
+        alertPresenters.append(notifier)
+        notifier.onAccessChange = { [weak menu] access in menu?.notificationAccessDidChange(access) }
+        notifier.start()
         coordinator.onStatusChange = { [weak self] _ in
             guard let self else { return }
             self.syncObserver.syncDidChange(self.coordinator)
@@ -61,10 +65,13 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
     func tick(now: Date = Date()) {
         for alert in ticker.tick(meetings: coordinator.meetings, now: now) {
-            alertPresenter.present(alert, now: now)
+            for presenter in alertPresenters { presenter.present(alert, now: now) }
         }
-        alertPresenter.tick(now: now)
+        for presenter in alertPresenters { presenter.tick(now: now) }
     }
+
+    /// Used by the S01 menu to pick up changes made in System Settings.
+    func refreshNotificationAccess() { notifier.refreshAccess() }
 
     func refresh() {
         coordinator.refresh(now: Date())

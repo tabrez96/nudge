@@ -2,7 +2,8 @@
 import Foundation
 import NudgeCore
 
-/// Shows alerts. Implemented by the S03 notifier and the S02 full-screen controller in later tickets.
+/// Shows alerts. Each presenter ignores kinds it doesn't own. Implemented by the S03 `Notifier` and,
+/// in a later ticket, the S02 full-screen controller.
 protocol AlertPresenting: AnyObject {
     /// Called once per due alert, already marked fired.
     func present(_ alert: ScheduledAlert, now: Date)

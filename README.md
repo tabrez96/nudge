@@ -61,6 +61,7 @@ Layout:
 
 1. Add your Google account in System Settings → Internet Accounts and turn on Calendars. Wait for its calendars to show up in the Calendar app. Nudge reads them through macOS and never asks for a Google password.
 2. On first launch, macOS asks for calendar access. If you said no, turn it on in System Settings → Privacy & Security → Calendars.
+3. On first launch, macOS also asks to allow notifications. If you said no, Nudge still plays its sound and the menu says notifications are off; turn them on in System Settings → Notifications → Nudge (alert style Banners or Alerts).
 
 ### Build the app
 
@@ -69,7 +70,7 @@ scripts/make-app.sh
 open build/Nudge.app
 ```
 
-The script builds in release mode, copies the binary and `Support/Info.plist` into `build/Nudge.app`, and ad-hoc signs the bundle (`codesign --sign -`), so it only runs on the Mac that built it. The app has no Dock icon and lives in the menu bar. Click the bell in the menu bar to see sync status and your next meetings. Until the alert screens land, alerts only show up in Console.app (search for "Nudge alert").
+The script builds in release mode, copies the binary and `Support/Info.plist` into `build/Nudge.app`, and ad-hoc signs the bundle (`codesign --sign -`), so it only runs on the Mac that built it. The app has no Dock icon and lives in the menu bar. Click the bell in the menu bar to see sync status and your next meetings. Five minutes before a meeting Nudge plays the Glass sound and posts a banner. The one-minute full-screen warning is not built yet; it only shows up in Console.app (search for "Nudge alert"). Run the bundled app for banners: `swift run Nudge` has no app bundle, so it plays the sound only.
 
 ---
 

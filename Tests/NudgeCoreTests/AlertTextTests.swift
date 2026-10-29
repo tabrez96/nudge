@@ -56,4 +56,24 @@ final class AlertTextTests: XCTestCase {
         XCTAssertEqual(TimeText.clock(base.addingTimeInterval(4 * 3600), calendar: utc), "12:00 PM")
         XCTAssertEqual(TimeText.clock(base.addingTimeInterval(-8 * 3600), calendar: utc), "12:00 AM")
     }
+
+    func testFullScreenAnnouncementSecondsAndStarted() {
+        let m = meeting()
+        func say(_ seconds: TimeInterval) -> String {
+            AlertText.fullScreenAnnouncement(for: m, now: m.start.addingTimeInterval(-seconds), calendar: utc)
+        }
+        XCTAssertEqual(say(45), "Weekly team sync starts in 45 seconds. 2:00 PM to 2:30 PM, Conference Room B.")
+        XCTAssertEqual(say(1), "Weekly team sync starts in 1 second. 2:00 PM to 2:30 PM, Conference Room B.")
+        let started = "Weekly team sync is starting now. 2:00 PM to 2:30 PM, Conference Room B."
+        XCTAssertEqual(say(0), started)
+        XCTAssertEqual(say(-5), started)
+    }
+
+    func testFullScreenAnnouncementWithoutLocation() {
+        for location in [nil, "  "] as [String?] {
+            let m = meeting(location: location)
+            XCTAssertEqual(AlertText.fullScreenAnnouncement(for: m, now: m.start.addingTimeInterval(-60), calendar: utc),
+                           "Weekly team sync starts in 1 minute. 2:00 PM to 2:30 PM.")
+        }
+    }
 }

@@ -3,7 +3,7 @@
 
 **A Mac menu bar app that warns you before Google Calendar meetings**
 
-Status: Ready to release
+Status: Released
 
 ## What it does
 

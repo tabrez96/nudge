@@ -60,8 +60,13 @@ Layout:
 ### Continuous integration
 
 `.github/workflows/build.yml` runs on every push to `develop` (and by hand from the Actions tab) on a
-GitHub-hosted macOS runner. For now it checks out the code and prints the Xcode and Swift versions;
-build and test steps will be added to the same job.
+GitHub-hosted macOS runner. It prints the Xcode and Swift versions, runs `scripts/make-app.sh` to build
+`Nudge.app` in the Release configuration, checks the bundle (executable, valid `Info.plist`, ad-hoc
+signature), and uploads it as the `Nudge-app` artifact (`Nudge.zip`, kept 14 days). To try a CI build,
+open the run in the Actions tab, download `Nudge-app`, unzip it twice (the artifact and then
+`Nudge.zip`), and open `Nudge.app`. It's ad-hoc signed, so macOS will block the first launch: try to open
+it once, then go to System Settings > Privacy & Security and click Open Anyway (on macOS 13 and 14 you can
+instead right-click it, choose Open, then Open again).
 
 ### Mac setup
 

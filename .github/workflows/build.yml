@@ -27,4 +27,24 @@ jobs:
           xcodebuild -version
           swift --version
 
-      # Build, test and app-bundle steps are added by the follow-up build tickets.
+      - name: Build Nudge.app (Release)
+        run: scripts/make-app.sh
+
+      - name: Verify app bundle
+        run: |
+          app=build/Nudge.app
+          test -x "$app/Contents/MacOS/Nudge"
+          plutil -lint "$app/Contents/Info.plist"
+          codesign --verify --strict --verbose=2 "$app"
+
+      # upload-artifact drops Unix permissions, so zip with ditto to keep the binary executable.
+      - name: Zip app bundle
+        run: ditto -c -k --keepParent build/Nudge.app build/Nudge.zip
+
+      - name: Upload Nudge.app
+        uses: actions/upload-artifact@v4
+        with:
+          name: Nudge-app
+          path: build/Nudge.zip
+          if-no-files-found: error
+          retention-days: 14

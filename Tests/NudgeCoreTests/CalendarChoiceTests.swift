@@ -36,4 +36,41 @@ final class CalendarChoiceTests: XCTestCase {
             XCTAssertFalse(CalendarChoice.looksLikeEmail(text), text)
         }
     }
+
+    func testResolveSavedIDWins() {
+        let a = cal("a", "Work"), b = cal("b", "Home")
+        XCTAssertEqual(CalendarChoice.resolve(savedID: "b", previous: a, from: [a, b]), .use(b))
+    }
+
+    func testResolveKeepsPrevious() {
+        let a = cal("a", "Work"), b = cal("b", "alex@example.com")
+        XCTAssertEqual(CalendarChoice.resolve(savedID: nil, previous: a, from: [b, a]), .use(a))
+    }
+
+    func testResolvePreviousGoneIsMissing() {
+        let a = cal("a", "alex@example.com")
+        XCTAssertEqual(CalendarChoice.resolve(savedID: nil, previous: a, from: [cal("b", "Work")]), .missing(a))
+    }
+
+    func testResolvePreviousGoneEmptyListIsMissing() {
+        let a = cal("a", "alex@example.com")
+        XCTAssertEqual(CalendarChoice.resolve(savedID: nil, previous: a, from: []), .missing(a))
+    }
+
+    func testResolveReaddedCalendarMatchesTitleAndSource() {
+        let a = cal("a", "alex@example.com"), a2 = cal("a2", "alex@example.com")
+        XCTAssertEqual(CalendarChoice.resolve(savedID: nil, previous: a, from: [cal("z", "Work"), a2]), .use(a2))
+    }
+
+    func testResolveAmbiguousTitleAndSourceIsMissing() {
+        let a = cal("a", "alex@example.com")
+        let list = [cal("a2", "alex@example.com"), cal("a3", "alex@example.com")]
+        XCTAssertEqual(CalendarChoice.resolve(savedID: nil, previous: a, from: list), .missing(a))
+    }
+
+    func testResolveNoPreviousFallsBackToPick() {
+        let b = cal("b", "alex@example.com")
+        XCTAssertEqual(CalendarChoice.resolve(savedID: nil, previous: nil, from: [cal("a", "Work"), b]), .use(b))
+        XCTAssertEqual(CalendarChoice.resolve(savedID: nil, previous: nil, from: []), .none)
+    }
 }

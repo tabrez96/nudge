@@ -52,10 +52,52 @@ final class SyncCoordinatorTests: XCTestCase {
         c.refresh(now: now)
         XCTAssertEqual(fake.fetches.last?.calendarID, "cal2")
         XCTAssertEqual(c.chosenCalendar?.id, "cal2")
-        fake.calendarList = [cal1]
+    }
+
+    private func syncedThenRemoved(_ replacement: [CalendarInfo]) -> (SyncCoordinator, [Meeting], Int) {
+        let c = makeCoordinator()
+        let list = [meeting("a", minutes: 10)]
+        fake.result = .success(list)
         c.refresh(now: now)
-        XCTAssertEqual(fake.fetches.last?.calendarID, "cal1")
-        XCTAssertEqual(c.savedCalendarID, "cal2")
+        let original = fake.calendarList
+        fake.calendarList = replacement
+        c.refresh(now: now.addingTimeInterval(60))
+        fake.calendarList = original
+        return (c, list, fake.fetches.count)
+    }
+
+    func testRemovedCalendarIsErrorAndKeepsMeetings() {
+        let original = fake.calendarList
+        for replacement in [[], [CalendarInfo(id: "other", title: "Birthdays", sourceTitle: "Other")]] {
+            fake = FakeCalendarSource()
+            fake.calendarList = original
+            let c = makeCoordinator()
+            let list = [meeting("a", minutes: 10)]
+            fake.result = .success(list)
+            c.refresh(now: now)
+            let fetches = fake.fetches.count
+            fake.calendarList = replacement
+            c.refresh(now: now.addingTimeInterval(60))
+            XCTAssertEqual(c.status, .error(.calendarNotFound, savedAt: now))
+            XCTAssertEqual(c.meetings, list)
+            XCTAssertEqual(c.chosenCalendar?.id, "cal1")
+            XCTAssertEqual(fake.fetches.count, fetches)
+        }
+    }
+
+    func testRemovedCalendarRecoversWhenBack() {
+        let (c, _, _) = syncedThenRemoved([])
+        c.refresh(now: now.addingTimeInterval(120))
+        XCTAssertEqual(c.status, .synced(at: now.addingTimeInterval(120)))
+    }
+
+    func testRemovedCalendarRecoversWithNewID() {
+        let (c, _, _) = syncedThenRemoved([])
+        fake.calendarList = [CalendarInfo(id: "cal1b", title: fake.calendarList[0].title,
+                                          sourceTitle: fake.calendarList[0].sourceTitle)]
+        c.refresh(now: now.addingTimeInterval(120))
+        XCTAssertEqual(c.status, .synced(at: now.addingTimeInterval(120)))
+        XCTAssertEqual(fake.fetches.last?.calendarID, "cal1b")
     }
 
     func testFailureKeepsPreviousMeetingsAndSavedAt() {

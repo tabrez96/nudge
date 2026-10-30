@@ -57,6 +57,12 @@ Layout:
 - `Sources/Nudge` — the macOS app shell (AppKit/EventKit), compiled only on macOS.
 - `Tests/NudgeCoreTests` — XCTest tests for `NudgeCore`.
 
+### Continuous integration
+
+`.github/workflows/build.yml` runs on every push to `develop` (and by hand from the Actions tab) on a
+GitHub-hosted macOS runner. For now it checks out the code and prints the Xcode and Swift versions;
+build and test steps will be added to the same job.
+
 ### Mac setup
 
 1. Add your Google account in System Settings → Internet Accounts and turn on Calendars. Wait for its calendars to show up in the Calendar app. Nudge reads them through macOS and never asks for a Google password.

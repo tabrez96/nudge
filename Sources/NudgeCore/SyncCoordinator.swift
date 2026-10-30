@@ -23,7 +23,7 @@ public final class SyncCoordinator {
         self.calendar = calendar
     }
 
-    /// Re-reads the chosen calendar. Only a successful fetch replaces `meetings`.
+    /// Re-reads the chosen calendar. Only a successful fetch replaces `meetings`; a vanished calendar is an error.
     public func refresh(now: Date) {
         setStatus(.syncing)
         guard source.authorization() == .granted else {
@@ -33,10 +33,18 @@ public final class SyncCoordinator {
             return
         }
         calendars = source.calendars()
-        guard let chosen = CalendarChoice.pick(savedID: savedCalendarID, from: calendars) else {
+        let chosen: CalendarInfo
+        switch CalendarChoice.resolve(savedID: savedCalendarID, previous: chosenCalendar, from: calendars) {
+        case .none:
             chosenCalendar = nil
             setStatus(.noAccess)
             return
+        case .missing:
+            // Keep `chosenCalendar` and `meetings`: alerts carry on from saved data until it comes back.
+            setStatus(.error(.calendarNotFound, savedAt: lastSyncedAt))
+            return
+        case .use(let calendar):
+            chosen = calendar
         }
         chosenCalendar = chosen
         let window = Self.fetchWindow(now: now, calendar: calendar)

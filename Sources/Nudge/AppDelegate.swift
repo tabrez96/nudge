@@ -66,10 +66,12 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     }
 
     func tick(now: Date = Date()) {
-        for alert in ticker.tick(meetings: coordinator.meetings, now: now) {
-            for presenter in alertPresenters { presenter.present(alert, now: now) }
-        }
+        for alert in ticker.tick(meetings: coordinator.meetings, now: now) { present(alert, now: now) }
         for presenter in alertPresenters { presenter.tick(now: now) }
+    }
+
+    private func present(_ alert: ScheduledAlert, now: Date) {
+        for presenter in alertPresenters { presenter.present(alert, now: now) }
     }
 
     /// Used by the S01 menu to pick up changes made in System Settings.
@@ -110,9 +112,14 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         }
     }
 
-    /// Stub for the S01 "Test the alerts" row until the test-alerts ticket.
+    /// S01 "Test the alerts": S03 now, then S02 a few seconds later, for a fake meeting.
+    /// Bypasses `ticker`, so real meetings' fired keys are untouched.
     func testAlerts() {
-        NSLog("Nudge: Test the alerts is not built yet")
+        for step in TestAlerts.steps(now: Date()) {
+            DispatchQueue.main.asyncAfter(deadline: .now() + step.delay) { [weak self] in
+                self?.present(step.alert, now: Date())
+            }
+        }
     }
 
     @discardableResult

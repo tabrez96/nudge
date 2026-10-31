@@ -62,3 +62,66 @@ jobs:
             build/Nudge-*.dmg.sha256
           if-no-files-found: error
           retention-days: 14
+
+  release:
+    name: Publish GitHub release
+    needs: build
+    if: github.event_name == 'push' && github.ref == 'refs/heads/develop'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: write
+    env:
+      GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      GH_REPO: ${{ github.repository }}
+    steps:
+      - name: Download Nudge.dmg
+        uses: actions/download-artifact@v4
+        with:
+          name: Nudge-dmg
+          path: dist
+
+      - name: Check the DMG
+        id: dmg
+        run: |
+          shopt -s nullglob
+          dmgs=(dist/Nudge-*.dmg)
+          if [ "${#dmgs[@]}" -ne 1 ]; then
+            echo "Expected exactly one DMG in dist/, found ${#dmgs[@]}." >&2
+            ls -la dist >&2
+            exit 1
+          fi
+          dmg="${dmgs[0]}"
+          (cd dist && sha256sum -c "$(basename "$dmg").sha256")
+          version="$(basename "$dmg" .dmg)"
+          version="${version#Nudge-}"
+          echo "dmg=$dmg" >> "$GITHUB_OUTPUT"
+          echo "version=$version" >> "$GITHUB_OUTPUT"
+          echo "tag=v$version-dev.$GITHUB_RUN_NUMBER" >> "$GITHUB_OUTPUT"
+
+      # Tags are unique per run, so a re-run of the same run re-uploads to its existing release.
+      - name: Create release and upload DMG
+        env:
+          DMG: ${{ steps.dmg.outputs.dmg }}
+          VERSION: ${{ steps.dmg.outputs.version }}
+          TAG: ${{ steps.dmg.outputs.tag }}
+        run: |
+          if gh release view "$TAG" >/dev/null 2>&1; then
+            gh release upload "$TAG" "$DMG" "$DMG.sha256" --clobber
+          else
+            cat > notes.md <<EOF
+          Development build of Nudge $VERSION from \`develop\` at ${GITHUB_SHA::7}.
+
+          Download \`$(basename "$DMG")\`, open it and drag Nudge onto Applications. Check the download with
+          \`shasum -a 256 -c $(basename "$DMG").sha256\`.
+
+          The app is ad-hoc signed and not notarized, so macOS blocks the first launch: try to open it once, then
+          go to System Settings > Privacy & Security and click Open Anyway.
+          EOF
+            gh release create "$TAG" "$DMG" "$DMG.sha256" \
+              --target "$GITHUB_SHA" \
+              --title "Nudge $VERSION (dev build $GITHUB_RUN_NUMBER)" \
+              --notes-file notes.md \
+              --prerelease
+          fi
+          gh release view "$TAG" --json url,assets --jq '.url, .assets[].name'

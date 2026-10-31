@@ -62,7 +62,8 @@ Layout:
 `.github/workflows/build.yml` runs on every push to `develop` (and by hand from the Actions tab) on a
 GitHub-hosted macOS runner. It prints the Xcode and Swift versions, runs `scripts/make-app.sh` to build
 `Nudge.app` in the Release configuration, checks the bundle (executable, valid `Info.plist`, ad-hoc
-signature), and uploads it as the `Nudge-app` artifact (`Nudge.zip`, kept 14 days). To try a CI build,
+signature), and uploads it as the `Nudge-app` artifact (`Nudge.zip`, kept 14 days). It then runs `scripts/make-dmg.sh` and uploads the disk image and its checksum as the `Nudge-dmg`
+artifact (also kept 14 days); unzip the artifact once and open the `.dmg`. To try a CI build,
 open the run in the Actions tab, download `Nudge-app`, unzip it twice (the artifact and then
 `Nudge.zip`), and open `Nudge.app`. It's ad-hoc signed, so macOS will block the first launch: try to open
 it once, then go to System Settings > Privacy & Security and click Open Anyway (on macOS 13 and 14 you can
@@ -82,6 +83,23 @@ open build/Nudge.app
 ```
 
 The script builds in release mode, copies the binary and `Support/Info.plist` into `build/Nudge.app`, and ad-hoc signs the bundle (`codesign --sign -`), so it only runs on the Mac that built it. The app has no Dock icon and lives in the menu bar. Click the bell in the menu bar to see sync status and your next meetings. Five minutes before a meeting Nudge plays the Glass sound and posts a banner. One minute before, a red full-screen warning with a countdown covers every screen, including full-screen apps and other Spaces; Got it, Return or Esc closes it everywhere. To try both without waiting for a meeting, choose Test the alerts in the menu: the banner and sound come right away, and the full-screen warning for a fake meeting follows about 5 seconds later. Test alerts don't affect real meetings. Alerts are also logged to Console.app (search for "Nudge alert"). Run the bundled app for banners: `swift run Nudge` has no app bundle, so it plays the sound only.
+
+### Package a DMG
+
+```sh
+scripts/make-app.sh
+scripts/make-dmg.sh
+open build/Nudge-0.1.0.dmg
+```
+
+`make-dmg.sh` packs `build/Nudge.app` into a compressed disk image named after
+`CFBundleShortVersionString` in `Support/Info.plist` (for example `build/Nudge-0.1.0.dmg`), with an
+Applications shortcut so you install by dragging Nudge onto it. It verifies the image, mounts it to
+check the app and its signature, and writes `build/Nudge-<version>.dmg.sha256`; check a download with
+`shasum -a 256 -c Nudge-<version>.dmg.sha256`. The app inside is ad-hoc signed and not notarized, so
+macOS blocks the first launch the same way as the CI build (see Continuous integration). Shipping to
+other people without that warning needs a Developer ID certificate and notarization, which this
+project doesn't set up.
 
 ### Manual checklist
 

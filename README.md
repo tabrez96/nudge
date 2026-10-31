@@ -69,6 +69,12 @@ open the run in the Actions tab, download `Nudge-app`, unzip it twice (the artif
 it once, then go to System Settings > Privacy & Security and click Open Anyway (on macOS 13 and 14 you can
 instead right-click it, choose Open, then Open again).
 
+On a push to `develop` (not a manual run), a second job, `release`, downloads the `Nudge-dmg` artifact,
+checks its checksum, and publishes a GitHub pre-release tagged `v<version>-dev.<run number>` (for example
+`v0.1.0-dev.42`) on that commit, with `Nudge-<version>.dmg` and its `.sha256` attached. This is the easiest
+way to get a build. Open the repo's Releases page, download the DMG from the newest pre-release, and open it.
+First launch is blocked the same way as above. Only this job has write access to the repo contents.
+
 ### Mac setup
 
 1. Add your Google account in System Settings → Internet Accounts and turn on Calendars. Wait for its calendars to show up in the Calendar app. Nudge reads them through macOS and never asks for a Google password.

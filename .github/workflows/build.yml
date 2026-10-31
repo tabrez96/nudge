@@ -48,3 +48,17 @@ jobs:
           path: build/Nudge.zip
           if-no-files-found: error
           retention-days: 14
+
+      - name: Build DMG
+        run: scripts/make-dmg.sh
+
+      # A DMG keeps Unix permissions, so it is uploaded as is.
+      - name: Upload Nudge.dmg
+        uses: actions/upload-artifact@v4
+        with:
+          name: Nudge-dmg
+          path: |
+            build/Nudge-*.dmg
+            build/Nudge-*.dmg.sha256
+          if-no-files-found: error
+          retention-days: 14

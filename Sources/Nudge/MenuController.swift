@@ -185,15 +185,15 @@ final class MenuController: NSObject, NSMenuDelegate, SyncObserving {
             item.submenu = submenu
             return item
         case .action(let action, let title, let key):
-            let item = NSMenuItem(title: title, action: #selector(perform(_:)), keyEquivalent: key ?? "")
+            let item = NSMenuItem(title: title, action: #selector(runAction(_:)), keyEquivalent: key ?? "")
             item.target = self
-            item.keyEquivalentModifierMask = .command
+            item.keyEquivalentModifierMask = NSEvent.ModifierFlags.command
             item.representedObject = ActionBox(action)
             return item
         }
     }
 
-    @objc private func perform(_ sender: NSMenuItem) {
+    @objc private func runAction(_ sender: NSMenuItem) {
         guard let box = sender.representedObject as? ActionBox else { return }
         switch box.action {
         case .refresh, .retry: app.refresh()

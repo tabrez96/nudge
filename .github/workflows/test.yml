@@ -1,0 +1,46 @@
+name: Test
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: test-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  test:
+    name: swift build && swift test (${{ matrix.name }})
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          # NudgeCore only; the AppKit shell is compiled out on Linux.
+          - name: Linux
+            os: ubuntu-latest
+            container: swift:5.10-jammy
+          # Also compiles the AppKit/EventKit shell.
+          - name: macOS
+            os: macos-15
+            container: ''
+    runs-on: ${{ matrix.os }}
+    container: ${{ matrix.container }}
+    timeout-minutes: 30
+    steps:
+      - name: Check out
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+
+      - name: Show toolchain
+        run: swift --version
+
+      - name: Build
+        run: swift build
+
+      - name: Test
+        run: swift test

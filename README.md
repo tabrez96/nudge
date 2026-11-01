@@ -59,6 +59,12 @@ Layout:
 
 ### Continuous integration
 
+`.github/workflows/test.yml` (the `Test` workflow) runs `swift build` and `swift test` on every push to
+any branch and on every pull request, in two jobs: Linux (the `swift:5.10-jammy` container, which
+builds and tests `NudgeCore`) and macOS (`macos-15`, which also compiles the app shell). A pull request
+with a red `Test` check has a broken build or failing test. Its status badge is
+`https://github.com/tabrez96/nudge/actions/workflows/test.yml/badge.svg`.
+
 `.github/workflows/build.yml` runs on every push to `develop` (and by hand from the Actions tab) on a
 GitHub-hosted macOS runner. It prints the Xcode and Swift versions, runs `scripts/make-app.sh` to build
 `Nudge.app` in the Release configuration, checks the bundle (executable, valid `Info.plist`, ad-hoc

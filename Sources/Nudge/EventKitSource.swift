@@ -25,6 +25,10 @@ final class EventKitSource: CalendarSource {
         }
     }
 
+    func refreshSources() {
+        store.refreshSourcesIfNecessary()
+    }
+
     func calendars() -> [CalendarInfo] {
         store.calendars(for: .event).map {
             CalendarInfo(id: $0.calendarIdentifier, title: $0.title, sourceTitle: $0.source?.title ?? "")

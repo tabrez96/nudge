@@ -82,7 +82,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     }
 
     @objc private func calendarStoreChanged(_ note: Notification) {
-        refresh()
+        // EventKit doesn't promise which thread posts this; SyncCoordinator is main-thread only.
+        DispatchQueue.main.async { [weak self] in self?.refresh() }
     }
 
     @objc private func didWake(_ note: Notification) {

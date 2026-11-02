@@ -23,7 +23,7 @@ public final class SyncCoordinator {
         self.calendar = calendar
     }
 
-    /// Re-reads the chosen calendar. Only a successful fetch replaces `meetings`; a vanished calendar is an error.
+    /// Syncs the source, then re-reads the chosen calendar. Only a successful fetch replaces `meetings`; a vanished calendar is an error.
     public func refresh(now: Date) {
         setStatus(.syncing)
         guard source.authorization() == .granted else {
@@ -32,6 +32,8 @@ public final class SyncCoordinator {
             setStatus(.noAccess)
             return
         }
+        // Without this EventKit can keep serving a cached view that misses meetings added after launch.
+        source.refreshSources()
         calendars = source.calendars()
         let chosen: CalendarInfo
         switch CalendarChoice.resolve(savedID: savedCalendarID, previous: chosenCalendar, from: calendars) {

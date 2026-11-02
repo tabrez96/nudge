@@ -209,6 +209,36 @@ final class SyncCoordinatorTests: XCTestCase {
         XCTAssertEqual(c.meetings.map(\.id), ["a", "b", "c"])
     }
 
+    func testRefreshPicksUpMeetingAddedAfterLaunch() {
+        let c = makeCoordinator()
+        let a = meeting("a", minutes: 10)
+        let b = meeting("b", minutes: 20)
+        fake.result = .success([a])
+        c.refresh(now: now)
+        XCTAssertEqual(c.meetings.map(\.id), ["a"])
+        fake.onRefreshSources = { [fake] in fake.result = .success([a, b]) }
+        c.refresh(now: now.addingTimeInterval(60))
+        XCTAssertEqual(c.meetings.map(\.id), ["a", "b"])
+        XCTAssertEqual(c.status, .synced(at: now.addingTimeInterval(60)))
+    }
+
+    func testSourcesRefreshBeforeEveryFetch() {
+        let c = makeCoordinator()
+        var seen: [Int] = []
+        fake.onRefreshSources = { [fake] in seen.append(fake.fetches.count) }
+        c.refresh(now: now)
+        c.refresh(now: now.addingTimeInterval(60))
+        XCTAssertEqual(fake.sourceRefreshes, 2)
+        XCTAssertEqual(seen, [0, 1])
+    }
+
+    func testNoAccessSkipsSourceRefresh() {
+        let c = makeCoordinator()
+        fake.access = .denied
+        c.refresh(now: now)
+        XCTAssertEqual(fake.sourceRefreshes, 0)
+    }
+
     func testSuccessWithNoMeetingsIsSynced() {
         let c = makeCoordinator()
         fake.result = .success([meeting("a", minutes: 5), meeting("b", minutes: 6)])

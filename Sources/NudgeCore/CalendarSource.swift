@@ -30,6 +30,8 @@ public enum CalendarSourceError: Error, Equatable {
 /// Read-only view of the user's calendars. The system calendar in the app; a fake in tests.
 public protocol CalendarSource {
     func authorization() -> CalendarAccess
+    /// Asks the system to pull the latest events from the server (e.g. Google) before reading.
+    func refreshSources()
     func calendars() -> [CalendarInfo]
     /// Meetings that overlap `from..<to` in the given calendar. Throws `CalendarSourceError`.
     func meetings(calendarID: String, from: Date, to: Date) throws -> [Meeting]

@@ -6,9 +6,15 @@ final class FakeCalendarSource: CalendarSource {
     var calendarList: [CalendarInfo] = [CalendarInfo(id: "cal1", title: "alex@example.com", sourceTitle: "Google")]
     var result: Result<[Meeting], Error> = .success([])
     var onFetch: (() -> Void)?
+    var onRefreshSources: (() -> Void)?
+    private(set) var sourceRefreshes = 0
     private(set) var fetches: [(calendarID: String, from: Date, to: Date)] = []
 
     func authorization() -> CalendarAccess { access }
+    func refreshSources() {
+        sourceRefreshes += 1
+        onRefreshSources?()
+    }
     func calendars() -> [CalendarInfo] { calendarList }
     func meetings(calendarID: String, from: Date, to: Date) throws -> [Meeting] {
         fetches.append((calendarID, from, to))

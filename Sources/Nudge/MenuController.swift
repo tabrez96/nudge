@@ -72,17 +72,46 @@ final class MenuController: NSObject, NSMenuDelegate, SyncObserving {
         shownIcon = model.icon.resolved(previous: shownIcon)
         let image: NSImage?
         if shownIcon == .problem {
-            let base = NSImage(systemSymbolName: "bell.badge", accessibilityDescription: nil)
-            image = base?.withSymbolConfiguration(NSImage.SymbolConfiguration(paletteColors: [Self.errorRed]))
-            image?.isTemplate = false
+            image = Self.problemBell()
         } else {
-            image = NSImage(systemSymbolName: "bell", accessibilityDescription: nil)
+            image = Self.bell()
             image?.isTemplate = true
         }
         let label = MenuPresentation.statusItemLabel(icon: shownIcon, status: model.status)
         statusItem.button?.image = image
         statusItem.button?.setAccessibilityLabel(label)
         statusItem.button?.toolTip = label
+    }
+
+    /// The menu bar bell, sized with the system configuration so both states match.
+    private static func bell() -> NSImage? {
+        NSImage(systemSymbolName: "bell", accessibilityDescription: nil)?
+            .withSymbolConfiguration(.init(pointSize: NSFont.systemFontSize(for: .regular), weight: .regular))
+    }
+
+    /// S01 problem icon: the template bell in the menu bar's text colour, with a clear ring cut out at the
+    /// top-right and a solid error-red dot inside it. Drawn per appearance, so it follows light and dark menu bars.
+    private static func problemBell() -> NSImage? {
+        guard let bell = bell() else { return nil }
+        let size = bell.size
+        let dotColor = errorRed
+        let image = NSImage(size: size, flipped: false) { rect in
+            guard let context = NSGraphicsContext.current else { return false }
+            context.cgContext.beginTransparencyLayer(auxiliaryInfo: nil)
+            bell.draw(in: rect)
+            NSColor.labelColor.set()
+            rect.fill(using: .sourceAtop)
+            context.compositingOperation = .destinationOut
+            NSBezierPath(ovalIn: MenuBarBadge.knockoutRect(in: size)).fill()
+            context.cgContext.endTransparencyLayer()
+            context.compositingOperation = .sourceOver
+            dotColor.setFill()
+            NSBezierPath(ovalIn: MenuBarBadge.dotRect(in: size)).fill()
+            return true
+        }
+        image.alignmentRect = bell.alignmentRect  // keeps the symbol's optical centring beside other icons
+        image.isTemplate = false
+        return image
     }
 
     // MARK: Menu

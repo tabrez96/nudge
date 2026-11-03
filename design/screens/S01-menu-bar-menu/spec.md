@@ -11,7 +11,7 @@ size: 372x340
 - Calendar submenu: pick which calendar to watch (checkmark on current).
 - Test the alerts: runs the S03 banner and S02 screen with a fake meeting.
 - Refresh now (⌘R), Quit (⌘Q).
-- Menu bar icon: bell; turns red with a dot while a problem exists.
+- Menu bar icon: template bell, one colour, tinted by macOS for light and dark menu bars. While a problem exists: the same bell with a solid #B3261E dot at its top-right, separated from the bell by a thin clear ring. The bell itself never turns red.
 ## States
 - Normal: screen.html. Empty (no more meetings today): states/empty.html.
 - Error (network/calendar failure): states/error.html. Keeps alerting from last saved data, says so, offers Retry.
@@ -21,3 +21,4 @@ size: 372x340
 - Problems are never shown as popups; only in this menu and the icon, so alerts are never interrupted.
 ## Change log
 - Initial design.
+- Menu bar icon: problem state is the template bell plus a red #B3261E dot, replacing the red-tinted bell.badge.

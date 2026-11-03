@@ -3,7 +3,7 @@ import Foundation
 /// Colour of the dot in S01's status line. `.unchanged` keeps whatever is showing (used while syncing).
 public enum StatusDot: Equatable { case green, red, unchanged }
 
-/// Menu bar icon: plain bell, or red bell with a dot while a calendar problem exists.
+/// Menu bar icon: plain template bell, or the same bell with a red dot while a calendar problem exists.
 public enum MenuIcon: Equatable { case normal, problem, unchanged }
 
 /// What a clickable S01 row does; the shell maps each to an action.

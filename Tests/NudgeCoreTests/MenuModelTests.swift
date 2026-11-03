@@ -35,6 +35,15 @@ final class MenuModelTests: XCTestCase {
 
     private let quit = MenuRow.action(.quit, title: "Quit Nudge", keyEquivalent: "q")
 
+    private func controls(selected: String? = "w") -> [MenuRow] {
+        [.calendarPicker(title: selected == "h" ? "Calendar: Home" : "Calendar: Work", options: [
+            CalendarOption(id: "w", title: "Work", isSelected: selected == "w"),
+            CalendarOption(id: "h", title: "Home", isSelected: selected == "h"),
+         ]),
+         .action(.testAlerts, title: "Test the alerts", keyEquivalent: nil),
+         .action(.refresh, title: "Refresh now", keyEquivalent: "r")]
+    }
+
     func testNormalStateRowsAndStatus() {
         let m = build(.synced(at: now), three())
         XCTAssertEqual(m.status, StatusLine(text: "Synced just now · Work", dot: .green))
@@ -86,12 +95,35 @@ final class MenuModelTests: XCTestCase {
     func testTomorrowJustAfterMidnightNotListed() {
         let late = now.addingTimeInterval(15 * 3600 + 50 * 60) // 23:50
         let m = build(.synced(at: late), [meeting("n", seconds: 16 * 3600 + 30 * 60)], at: late)
-        XCTAssertEqual(m.rows, [.message(MenuModel.emptyText), .separator, quit])
+        XCTAssertEqual(m.rows, [.message(MenuModel.emptyText), .separator] + controls() + [.separator, quit])
     }
 
     func testEmptyState() {
         let m = build(.synced(at: now), [])
-        XCTAssertEqual(m.rows, [.message(MenuModel.emptyText), .separator, quit])
+        XCTAssertEqual(m.rows, [.message(MenuModel.emptyText), .separator] + controls() + [.separator, quit])
+    }
+
+    func testEmptyStateKeepsControlsWhenNotificationsDenied() {
+        let m = build(.synced(at: now), [], notifications: false)
+        XCTAssertEqual(m.rows,
+                       [.warning(MenuModel.notificationsOffText), .separator,
+                        .message(MenuModel.emptyText), .separator] + controls() + [.separator, quit])
+    }
+
+    func testSyncingEmptyKeepsControls() {
+        let m = build(.syncing, [])
+        XCTAssertEqual(m.rows, build(.synced(at: now), []).rows)
+        XCTAssertEqual(m.status.dot, .unchanged)
+    }
+
+    func testEmptyCalendarPickerSwitchesSelection() {
+        let empty = build(.synced(at: now), [], selected: "h")
+        XCTAssertEqual(empty.status.text, "Synced just now · Home")
+        XCTAssertEqual(empty.rows, [.message(MenuModel.emptyText), .separator]
+                       + controls(selected: "h") + [.separator, quit])
+        let full = build(.synced(at: now), three(), selected: "w")
+        XCTAssertEqual(full.rows.first, .header("Next meetings"))
+        XCTAssertTrue(full.rows.contains(controls(selected: "w")[0]))
     }
 
     func testErrorStateWithSavedTime() {

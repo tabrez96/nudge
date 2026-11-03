@@ -104,10 +104,6 @@ extension MenuModel {
                 line = StatusLine(text: text, dot: .green)
                 icon = .normal
             }
-            if meetingRows.isEmpty {
-                return MenuModel(status: line, icon: icon,
-                                 rows: joined([warningGroup, [.message(emptyText)], quitGroup]))
-            }
             let options = calendars.map {
                 CalendarOption(id: $0.id, title: $0.title, isSelected: $0.id == selected?.id)
             }
@@ -116,6 +112,10 @@ extension MenuModel {
                 .action(.testAlerts, title: "Test the alerts", keyEquivalent: nil),
                 .action(.refresh, title: "Refresh now", keyEquivalent: "r"),
             ]
+            if meetingRows.isEmpty {
+                return MenuModel(status: line, icon: icon,
+                                 rows: joined([warningGroup, [.message(emptyText)], controls, quitGroup]))
+            }
             return MenuModel(status: line, icon: icon,
                              rows: joined([warningGroup, [.header(nextMeetingsHeader)] + meetingRows,
                                            controls, quitGroup]))

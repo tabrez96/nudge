@@ -64,10 +64,15 @@ swift test         # run the NudgeCore tests (works on Linux and macOS)
 swift run Nudge    # macOS: starts the menu bar app; Linux: prints a "macOS only" message
 ```
 
+On macOS, `scripts/make-app.sh` builds `build/Nudge.app` (with its icon) and `scripts/make-dmg.sh` packs it into a disk image.
+
+The app icon master is `Support/AppIcon.png`, drawn by `scripts/make-icon.py` (Python 3, no dependencies). After changing the drawing, run `python3 scripts/make-icon.py` and commit the new PNG. `make-app.sh` turns it into `AppIcon.icns` with `sips` and `iconutil`.
+
 Layout:
 - `Sources/NudgeCore` — pure-Foundation logic (timing, sync, display text), tested on Linux.
 - `Sources/Nudge` — the macOS app shell (AppKit/EventKit), compiled only on macOS.
 - `Tests/NudgeCoreTests` — XCTest tests for `NudgeCore`.
+- `Support` — Info.plist and the app icon master.
 
 ---
 

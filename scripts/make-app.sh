@@ -16,6 +16,18 @@ rm -rf "$app"
 mkdir -p "$app/Contents/MacOS" "$app/Contents/Resources"
 cp "$bin_dir/Nudge" "$app/Contents/MacOS/Nudge"
 cp Support/Info.plist "$app/Contents/Info.plist"
+
+# App icon: every standard size from the 1024px master, packed into AppIcon.icns.
+iconset_dir="$(mktemp -d)"
+trap 'rm -rf "$iconset_dir"' EXIT
+iconset="$iconset_dir/AppIcon.iconset"
+mkdir -p "$iconset"
+for size in 16 32 128 256 512; do
+    sips -z "$size" "$size" Support/AppIcon.png --out "$iconset/icon_${size}x${size}.png" >/dev/null
+    sips -z "$((size * 2))" "$((size * 2))" Support/AppIcon.png --out "$iconset/icon_${size}x${size}@2x.png" >/dev/null
+done
+iconutil -c icns "$iconset" -o "$app/Contents/Resources/AppIcon.icns"
+
 codesign --force --sign - "$app"
 
 echo "Built $app. Open it with: open $app"

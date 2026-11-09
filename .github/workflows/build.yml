@@ -36,6 +36,8 @@ jobs:
           test -x "$app/Contents/MacOS/Nudge"
           plutil -lint "$app/Contents/Info.plist"
           codesign --verify --strict --verbose=2 "$app"
+          test -s "$app/Contents/Resources/AppIcon.icns"
+          test "$(/usr/libexec/PlistBuddy -c 'Print :CFBundleIconFile' "$app/Contents/Info.plist")" = AppIcon
 
       # upload-artifact drops Unix permissions, so zip with ditto to keep the binary executable.
       - name: Zip app bundle

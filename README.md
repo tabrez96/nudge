@@ -64,6 +64,10 @@ swift test         # run the NudgeCore tests (works on Linux and macOS)
 swift run Nudge    # macOS: starts the menu bar app; Linux: prints a "macOS only" message
 ```
 
+The app icon is built from `Support/AppIcon/AppIcon-1024.png`, which `scripts/make-icon-master.sh` renders from
+`design/brand/mark.svg` (needs `rsvg-convert`). Rerun it and commit the PNG when the mark changes;
+`scripts/make-app.sh` turns it into `AppIcon.icns`.
+
 Layout:
 - `Sources/NudgeCore` — pure-Foundation logic (timing, sync, display text), tested on Linux.
 - `Sources/Nudge` — the macOS app shell (AppKit/EventKit), compiled only on macOS.

@@ -7,8 +7,8 @@ public enum AlertText {
         "\(meeting.title) in 5 minutes"
     }
 
-    /// S03 body: "2:00 PM · Conference Room B", or "2:00 PM" with no location.
-    public static func bannerBody(for meeting: Meeting, calendar: Calendar = .current) -> String {
+    /// S03 subtitle: "2:00 PM · Conference Room B", or "2:00 PM" with no location.
+    public static func bannerSubtitle(for meeting: Meeting, calendar: Calendar = .current) -> String {
         withLocation(TimeText.clock(meeting.start, calendar: calendar), meeting)
     }
 
@@ -46,7 +46,9 @@ public enum AlertText {
         if let location = meeting.location?.trimmingCharacters(in: .whitespacesAndNewlines), !location.isEmpty {
             range += ", " + location
         }
-        return "\(meeting.title) \(when). \(range)."
+        var text = "\(meeting.title) \(when). \(range)."
+        if meeting.joinLink != nil { text += " Join available." }
+        return text
     }
 
     private static func plural(_ n: Int, _ unit: String) -> String {

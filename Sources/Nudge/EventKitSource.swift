@@ -68,13 +68,16 @@ final class EventKitSource: CalendarSource {
 
         let title = event.title?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
         let location = event.location?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
+        let notes = event.notes?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
         return Meeting(id: event.calendarItemExternalIdentifier ?? event.calendarItemIdentifier,
                        title: title.isEmpty ? untitledTitle : title,
                        start: event.startDate,
                        end: event.endDate,
                        location: location.isEmpty ? nil : location,
                        isAllDay: false,
-                       isDeclined: false)
+                       isDeclined: false,
+                       url: event.url,
+                       notes: notes.isEmpty ? nil : notes)
     }
 }
 #endif

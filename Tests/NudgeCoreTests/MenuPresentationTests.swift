@@ -99,4 +99,17 @@ final class MenuPresentationTests: XCTestCase {
         XCTAssertTrue(MenuPresentation.statusItemLabel(icon: ok.icon, status: ok.status)
             .hasPrefix("Nudge. Synced just now"))
     }
+
+    func testMeetingLabelWithJoinAndSummary() {
+        XCTAssertEqual(MenuPresentation.meetingLabel(
+            MeetingRow(title: "Standup", detail: "until 2:30 PM", isSoon: false, isNow: true,
+                       summary: "Agenda: launch", joinURL: URL(string: "https://meet.google.com/abc"))),
+            "Standup, until 2:30 PM. Join. Agenda: launch")
+    }
+
+    func testMeetingLabelSummaryWithoutJoin() {
+        XCTAssertEqual(MenuPresentation.meetingLabel(
+            MeetingRow(title: "1:1 with Dana", detail: "2:30 PM", isSoon: false, summary: "Quick catch-up")),
+            "1:1 with Dana, at 2:30 PM. Quick catch-up")
+    }
 }

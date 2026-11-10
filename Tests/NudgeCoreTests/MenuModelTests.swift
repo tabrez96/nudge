@@ -283,4 +283,37 @@ final class MenuModelTests: XCTestCase {
             .meeting(MeetingRow(title: "u", detail: "2:30 PM", isSoon: false)),
         ])
     }
+
+    private func linked(_ id: String, seconds: TimeInterval) -> Meeting {
+        let start = now.addingTimeInterval(seconds)
+        return Meeting(id: id, title: id, start: start, end: start.addingTimeInterval(1800),
+                       location: "https://meet.google.com/abc", notes: "Agenda: launch")
+    }
+
+    private func meetingRows(_ model: MenuModel) -> [MeetingRow] {
+        model.rows.compactMap { if case .meeting(let r) = $0 { return r } else { return nil } }
+    }
+
+    func testMeetingRowCarriesSummaryAndJoinURL() {
+        let model = build(.synced(at: now), [linked("now", seconds: -600), linked("next", seconds: 3600)])
+        let rows = meetingRows(model)
+        XCTAssertEqual(rows.count, 2)
+        for row in rows {
+            XCTAssertEqual(row.summary, "Agenda: launch")
+            XCTAssertEqual(row.joinURL, URL(string: "https://meet.google.com/abc"))
+        }
+    }
+
+    func testRowWithoutLinkOrNotes() {
+        let rows = meetingRows(build(.synced(at: now), [meeting("a", seconds: 3600)]))
+        XCTAssertEqual(rows.count, 1)
+        XCTAssertNil(rows[0].summary)
+        XCTAssertNil(rows[0].joinURL)
+    }
+
+    func testErrorStateRowsKeepJoinURL() {
+        let rows = meetingRows(build(.error(.fetchFailed, savedAt: now), [linked("next", seconds: 3600)]))
+        XCTAssertEqual(rows.count, 1)
+        XCTAssertNotNil(rows[0].joinURL)
+    }
 }

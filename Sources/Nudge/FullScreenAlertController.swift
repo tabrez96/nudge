@@ -11,13 +11,16 @@ private enum S02Style {
     static let titleFont = NSFont.systemFont(ofSize: 96, weight: .bold)
     static let detailFont = NSFont.systemFont(ofSize: 28, weight: .regular)
     static let buttonFont = NSFont.systemFont(ofSize: 24, weight: .semibold)
+    static let summaryFont = NSFont.systemFont(ofSize: 24, weight: .regular)
+    static let summaryColor = NSColor.white.withAlphaComponent(0.9)
+    static let summaryMaxWidth: CGFloat = 760
     static let hintFont = NSFont.systemFont(ofSize: 24, weight: .regular)
     static let hintColor = NSColor.white.withAlphaComponent(0.85)
 }
 
-/// "Got it". Always focusable (plain buttons only take focus with Full Keyboard Access) and reports focus
+/// "Got it" and "Join". Always focusable (plain buttons only take focus with Full Keyboard Access) and reports focus
 /// so the view can draw its own ring.
-final class GotItButton: NSButton {
+final class WarningButton: NSButton {
     var onFocusChange: ((Bool) -> Void)?
 
     override var acceptsFirstResponder: Bool { true }
@@ -37,17 +40,24 @@ final class GotItButton: NSButton {
 }
 
 final class WarningView: NSView {
-    let button = GotItButton()
+    let gotItButton = WarningButton()
+    let joinButton = WarningButton()
     private let onDismiss: () -> Void
+    private let onJoin: (URL) -> Void
+    private var joinURL: URL?
     private let headingLabel = NSTextField(labelWithString: "")
     private let countdownLabel = NSTextField(labelWithString: "")
     private let titleLabel = NSTextField(wrappingLabelWithString: "")
     private let detailLabel = NSTextField(labelWithString: "")
+    private let summaryLabel = NSTextField(wrappingLabelWithString: "")
     private let hintLabel = NSTextField(labelWithString: FullScreenContent.hint)
-    private let ringView = NSView()
+    private lazy var gotItRing = ringed(gotItButton)
+    private lazy var joinRing = ringed(joinButton)
+    private let stack = NSStackView()
 
-    init(frame: NSRect, onDismiss: @escaping () -> Void) {
+    init(frame: NSRect, onDismiss: @escaping () -> Void, onJoin: @escaping (URL) -> Void) {
         self.onDismiss = onDismiss
+        self.onJoin = onJoin
         super.init(frame: frame)
         wantsLayer = true
         layer?.backgroundColor = S02Style.alertRed.cgColor
@@ -58,7 +68,7 @@ final class WarningView: NSView {
 
     private func build() {
         let padding = S02Style.padding
-        for label in [headingLabel, countdownLabel, titleLabel, detailLabel, hintLabel] {
+        for label in [headingLabel, countdownLabel, titleLabel, detailLabel, summaryLabel, hintLabel] {
             label.alignment = .center
             label.textColor = .white
         }
@@ -72,33 +82,31 @@ final class WarningView: NSView {
         detailLabel.font = S02Style.detailFont
         detailLabel.maximumNumberOfLines = 1
         detailLabel.lineBreakMode = .byTruncatingTail
+        summaryLabel.font = S02Style.summaryFont
+        summaryLabel.textColor = S02Style.summaryColor
+        summaryLabel.maximumNumberOfLines = 2
+        summaryLabel.lineBreakMode = .byWordWrapping
+        summaryLabel.cell?.truncatesLastVisibleLine = true
+        summaryLabel.preferredMaxLayoutWidth = min(S02Style.summaryMaxWidth, frame.width - 2 * padding)
 
-        button.isBordered = false
-        button.wantsLayer = true
-        button.layer?.backgroundColor = NSColor.white.cgColor
-        button.layer?.cornerRadius = 12
-        button.attributedTitle = NSAttributedString(string: FullScreenContent.buttonTitle, attributes: [
-            .font: S02Style.buttonFont,
-            .foregroundColor: S02Style.alertRed,
-        ])
-        button.keyEquivalent = "\r"
-        button.focusRingType = .none
-        button.setAccessibilityLabel(FullScreenContent.buttonTitle)
-        button.target = self
-        button.action = #selector(gotIt)
-        button.translatesAutoresizingMaskIntoConstraints = false
+        gotItButton.keyEquivalent = "\r"
+        gotItButton.setAccessibilityLabel(FullScreenContent.buttonTitle)
+        gotItButton.target = self
+        gotItButton.action = #selector(gotIt)
+        style(gotItButton, title: FullScreenContent.buttonTitle, outlined: false)
 
-        ringView.wantsLayer = true
-        ringView.layer?.cornerRadius = 18
-        ringView.layer?.borderWidth = 4
-        ringView.layer?.borderColor = NSColor.clear.cgColor
-        ringView.translatesAutoresizingMaskIntoConstraints = false
-        ringView.addSubview(button)
-        button.onFocusChange = { [weak ringView] focused in
-            ringView?.layer?.borderColor = (focused ? S02Style.focusRing : NSColor.clear).cgColor
+        joinButton.setAccessibilityLabel(FullScreenContent.joinTitle)
+        joinButton.target = self
+        joinButton.action = #selector(join)
+        style(joinButton, title: FullScreenContent.joinTitle, outlined: false)
+
+        let buttons = NSStackView(views: [joinRing, gotItRing])
+        buttons.orientation = .horizontal
+        buttons.spacing = 16
+
+        for view in [headingLabel, countdownLabel, titleLabel, detailLabel, summaryLabel, buttons, hintLabel] {
+            stack.addArrangedSubview(view)
         }
-
-        let stack = NSStackView(views: [headingLabel, countdownLabel, titleLabel, detailLabel, ringView, hintLabel])
         stack.orientation = .vertical
         stack.alignment = .centerX
         stack.spacing = 16
@@ -106,17 +114,12 @@ final class WarningView: NSView {
         stack.setCustomSpacing(8, after: countdownLabel)
         stack.setCustomSpacing(16, after: titleLabel)
         stack.setCustomSpacing(32, after: detailLabel)
-        stack.setCustomSpacing(12, after: ringView)
+        stack.setCustomSpacing(32, after: summaryLabel)
+        stack.setCustomSpacing(12, after: buttons)
         stack.translatesAutoresizingMaskIntoConstraints = false
         addSubview(stack)
 
         NSLayoutConstraint.activate([
-            button.widthAnchor.constraint(equalToConstant: 160),
-            button.heightAnchor.constraint(equalToConstant: 56),
-            button.centerXAnchor.constraint(equalTo: ringView.centerXAnchor),
-            button.centerYAnchor.constraint(equalTo: ringView.centerYAnchor),
-            ringView.widthAnchor.constraint(equalToConstant: 172),
-            ringView.heightAnchor.constraint(equalToConstant: 68),
             stack.centerXAnchor.constraint(equalTo: centerXAnchor),
             stack.centerYAnchor.constraint(equalTo: centerYAnchor),
             stack.leadingAnchor.constraint(greaterThanOrEqualTo: leadingAnchor, constant: padding),
@@ -125,10 +128,55 @@ final class WarningView: NSView {
             stack.bottomAnchor.constraint(lessThanOrEqualTo: bottomAnchor, constant: -padding),
             titleLabel.widthAnchor.constraint(lessThanOrEqualTo: widthAnchor, constant: -2 * padding),
             detailLabel.widthAnchor.constraint(lessThanOrEqualTo: widthAnchor, constant: -2 * padding),
+            summaryLabel.widthAnchor.constraint(lessThanOrEqualToConstant: S02Style.summaryMaxWidth),
+            summaryLabel.widthAnchor.constraint(lessThanOrEqualTo: widthAnchor, constant: -2 * padding),
         ])
     }
 
+    /// Wraps a button in a ring view that shows the focus ring.
+    private func ringed(_ button: WarningButton) -> NSView {
+        let ring = NSView()
+        ring.wantsLayer = true
+        ring.layer?.cornerRadius = 18
+        ring.layer?.borderWidth = 4
+        ring.layer?.borderColor = NSColor.clear.cgColor
+        ring.translatesAutoresizingMaskIntoConstraints = false
+        button.translatesAutoresizingMaskIntoConstraints = false
+        ring.addSubview(button)
+        button.onFocusChange = { [weak ring] focused in
+            ring?.layer?.borderColor = (focused ? S02Style.focusRing : NSColor.clear).cgColor
+        }
+        NSLayoutConstraint.activate([
+            button.widthAnchor.constraint(equalToConstant: 160),
+            button.heightAnchor.constraint(equalToConstant: 56),
+            button.centerXAnchor.constraint(equalTo: ring.centerXAnchor),
+            button.centerYAnchor.constraint(equalTo: ring.centerYAnchor),
+            ring.widthAnchor.constraint(equalToConstant: 172),
+            ring.heightAnchor.constraint(equalToConstant: 68),
+        ])
+        return ring
+    }
+
+    /// White fill with red text, or (outlined) a clear fill with a 2 pt white border and white text.
+    private func style(_ button: WarningButton, title: String, outlined: Bool) {
+        button.isBordered = false
+        button.wantsLayer = true
+        button.layer?.backgroundColor = (outlined ? NSColor.clear : NSColor.white).cgColor
+        button.layer?.cornerRadius = 12
+        button.layer?.borderWidth = outlined ? 2 : 0
+        button.layer?.borderColor = NSColor.white.cgColor
+        button.attributedTitle = NSAttributedString(string: title, attributes: [
+            .font: S02Style.buttonFont,
+            .foregroundColor: outlined ? NSColor.white : S02Style.alertRed,
+        ])
+        button.focusRingType = .none
+    }
+
     @objc private func gotIt() { onDismiss() }
+
+    @objc private func join() {
+        if let joinURL { onJoin(joinURL) }
+    }
 
     func update(_ content: FullScreenContent) {
         headingLabel.isHidden = content.heading == nil
@@ -143,6 +191,15 @@ final class WarningView: NSView {
         countdownLabel.font = countdownFont(for: content.countdown)
         if titleLabel.stringValue != content.title { titleLabel.stringValue = content.title }
         if detailLabel.stringValue != content.detail { detailLabel.stringValue = content.detail }
+        summaryLabel.isHidden = content.summary == nil
+        if let summary = content.summary, summaryLabel.stringValue != summary { summaryLabel.stringValue = summary }
+        stack.setCustomSpacing(content.summary == nil ? 32 : 16, after: detailLabel)
+        joinURL = content.joinURL
+        let hasLink = content.joinURL != nil
+        joinRing.isHidden = !hasLink
+        style(gotItButton, title: FullScreenContent.buttonTitle, outlined: hasLink)
+        gotItButton.nextKeyView = hasLink ? joinButton : nil
+        joinButton.nextKeyView = hasLink ? gotItButton : nil
     }
 
     /// 200 pt unless the text ("Starting now" on a small screen) would overflow the padded width.
@@ -162,7 +219,8 @@ final class WarningView: NSView {
 final class WarningWindow: NSWindow {
     private let onDismiss: () -> Void
 
-    init(screen: NSScreen, content: FullScreenContent, onDismiss: @escaping () -> Void) {
+    init(screen: NSScreen, content: FullScreenContent, onDismiss: @escaping () -> Void,
+         onJoin: @escaping (URL) -> Void) {
         self.onDismiss = onDismiss
         super.init(contentRect: screen.frame, styleMask: [.borderless], backing: .buffered, defer: false)
         setFrame(screen.frame, display: false)
@@ -173,7 +231,8 @@ final class WarningWindow: NSWindow {
         isOpaque = true
         backgroundColor = S02Style.alertRed
         isMovable = false
-        contentView = WarningView(frame: NSRect(origin: .zero, size: screen.frame.size), onDismiss: onDismiss)
+        contentView = WarningView(frame: NSRect(origin: .zero, size: screen.frame.size),
+                                  onDismiss: onDismiss, onJoin: onJoin)
         warningView.update(content)
     }
 
@@ -214,6 +273,12 @@ final class FullScreenAlertController: NSObject, AlertPresenting {
         for window in windows { window.warningView.update(content) }
     }
 
+    /// Opens the link, then closes the warning on every screen.
+    func join(_ url: URL) {
+        NSWorkspace.shared.open(url)
+        dismiss()
+    }
+
     /// Got it, Return or Esc on any screen.
     func dismiss() {
         guard warning.isOpen else { return }
@@ -226,13 +291,15 @@ final class FullScreenAlertController: NSObject, AlertPresenting {
         closeWindows()
         guard let content = warning.content(now: now) else { return }
         windows = NSScreen.screens.map { screen in
-            WarningWindow(screen: screen, content: content) { [weak self] in self?.dismiss() }
+            WarningWindow(screen: screen, content: content,
+                          onDismiss: { [weak self] in self?.dismiss() },
+                          onJoin: { [weak self] url in self?.join(url) })
         }
         guard let main = windows.first else { return }   // screens[0] is the menu-bar screen
         NSApp.activate(ignoringOtherApps: true)
         for window in windows.dropFirst() { window.orderFrontRegardless() }
         main.makeKeyAndOrderFront(nil)
-        main.makeFirstResponder(main.warningView.button)
+        main.makeFirstResponder(main.warningView.gotItButton)
         if announce, let text = warning.announcement(now: now) {
             NSAccessibility.post(element: main, notification: .announcementRequested,
                                  userInfo: [.announcement: text,

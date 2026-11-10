@@ -50,9 +50,13 @@ public enum MenuPresentation {
     }
 
     /// VoiceOver label for a meeting row, e.g. "Weekly team sync, in 4 min", "Standup, until 2:30 PM"
-    /// or "1:1 with Dana, at 2:30 PM".
+    /// or "1:1 with Dana, at 2:30 PM"; adds ". Join" when the row has a link, then ". " and its summary,
+    /// e.g. "Standup, until 2:30 PM. Join. Agenda: launch".
     public static func meetingLabel(_ row: MeetingRow) -> String {
-        row.isSoon || row.isNow ? "\(row.title), \(row.detail)" : "\(row.title), at \(row.detail)"
+        var label = row.isSoon || row.isNow ? "\(row.title), \(row.detail)" : "\(row.title), at \(row.detail)"
+        if row.joinURL != nil { label += ". Join" }
+        if let summary = row.summary { label += ". " + summary }
+        return label
     }
 
     /// Shortens long meeting titles so the right-aligned time still fits: keeps the first

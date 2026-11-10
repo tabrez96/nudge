@@ -29,12 +29,19 @@ public struct MeetingRow: Equatable {
     public let isSoon: Bool
     /// True when the meeting is running now; listed under the "Now" header.
     public let isNow: Bool
+    /// Cleaned notes shown under the title (two lines max); nil shows nothing.
+    public let summary: String?
+    /// Link the row opens; nil makes the row non-clickable with no pill.
+    public let joinURL: URL?
 
-    public init(title: String, detail: String, isSoon: Bool, isNow: Bool = false) {
+    public init(title: String, detail: String, isSoon: Bool, isNow: Bool = false,
+                summary: String? = nil, joinURL: URL? = nil) {
         self.title = title
         self.detail = detail
         self.isSoon = isSoon
         self.isNow = isNow
+        self.summary = summary
+        self.joinURL = joinURL
     }
 }
 
@@ -165,7 +172,7 @@ extension MenuModel {
 
     static func nowRow(_ meeting: Meeting, calendar: Calendar) -> MeetingRow {
         MeetingRow(title: meeting.title, detail: "until \(TimeText.clock(meeting.end, calendar: calendar))",
-                   isSoon: false, isNow: true)
+                   isSoon: false, isNow: true, summary: meeting.summary, joinURL: meeting.joinLink)
     }
 
     static func upcomingMeetings(_ meetings: [Meeting], now: Date, calendar: Calendar) -> [Meeting] {
@@ -180,9 +187,10 @@ extension MenuModel {
         let untilStart = meeting.start.timeIntervalSince(now)
         if untilStart <= AlertEngine.fiveMinuteLead {
             let n = Int((untilStart / 60).rounded(.up))
-            return MeetingRow(title: meeting.title, detail: "in \(n) min", isSoon: true)
+            return MeetingRow(title: meeting.title, detail: "in \(n) min", isSoon: true,
+                              summary: meeting.summary, joinURL: meeting.joinLink)
         }
         return MeetingRow(title: meeting.title, detail: TimeText.clock(meeting.start, calendar: calendar),
-                          isSoon: false)
+                          isSoon: false, summary: meeting.summary, joinURL: meeting.joinLink)
     }
 }

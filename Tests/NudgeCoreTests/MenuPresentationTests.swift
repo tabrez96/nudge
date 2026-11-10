@@ -54,6 +54,12 @@ final class MenuPresentationTests: XCTestCase {
         XCTAssertEqual(MenuPresentation.statusLineLabel(StatusLine(text: "Syncing…", dot: .unchanged)), "Syncing…")
     }
 
+    func testMeetingLabelForNowRow() {
+        XCTAssertEqual(MenuPresentation.meetingLabel(
+            MeetingRow(title: "Standup", detail: "until 2:30 PM", isSoon: false, isNow: true)),
+            "Standup, until 2:30 PM")
+    }
+
     func testMeetingLabelSoonAndLater() {
         XCTAssertEqual(MenuPresentation.meetingLabel(
             MeetingRow(title: "Weekly team sync", detail: "in 4 min", isSoon: true)),

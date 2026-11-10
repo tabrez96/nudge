@@ -6,6 +6,9 @@ import UserNotifications
 /// S03: plays the alert sound and posts the five-minute banner. Ignores other alert kinds.
 final class Notifier: NSObject, AlertPresenting, UNUserNotificationCenterDelegate {
     static let soundName = "Glass"
+    static let joinCategory = "nudge.join"
+    static let joinAction = "nudge.join.open"
+    static let joinURLKey = "joinURL"
 
     /// Called on the main thread whenever the access state is (re)read.
     var onAccessChange: ((NotificationAccess) -> Void)?
@@ -23,6 +26,10 @@ final class Notifier: NSObject, AlertPresenting, UNUserNotificationCenterDelegat
             return
         }
         center.delegate = self
+        center.setNotificationCategories([UNNotificationCategory(
+            identifier: Self.joinCategory,
+            actions: [UNNotificationAction(identifier: Self.joinAction, title: "Join", options: [])],
+            intentIdentifiers: [], options: [])])
         // Alert only: the sound is played by NSSound, so it can never play twice.
         center.requestAuthorization(options: [.alert]) { [weak self] _, error in
             if let error { NSLog("Nudge: notification authorization failed: %@", "\(error)") }
@@ -64,7 +71,12 @@ final class Notifier: NSObject, AlertPresenting, UNUserNotificationCenterDelegat
         guard let center else { return }
         let content = UNMutableNotificationContent()
         content.title = AlertText.bannerTitle(for: alert.meeting)
-        content.body = AlertText.bannerBody(for: alert.meeting)
+        content.subtitle = AlertText.bannerSubtitle(for: alert.meeting)
+        content.body = alert.meeting.summary ?? ""
+        if let url = alert.meeting.joinLink {
+            content.categoryIdentifier = Self.joinCategory
+            content.userInfo = [Self.joinURLKey: url.absoluteString]
+        }
         // Posting while denied is harmless (the system drops it), so a stale `access` can't swallow a banner.
         let request = UNNotificationRequest(identifier: alert.firedKey, content: content, trigger: nil)
         center.add(request) { error in
@@ -80,9 +92,14 @@ final class Notifier: NSObject, AlertPresenting, UNUserNotificationCenterDelegat
         completionHandler([.banner, .list])
     }
 
-    /// Clicking the banner only dismisses it (S03).
+    /// Clicking the banner only dismisses it; its Join action opens the link (S03).
     func userNotificationCenter(_ center: UNUserNotificationCenter, didReceive response: UNNotificationResponse,
                                 withCompletionHandler completionHandler: @escaping () -> Void) {
+        if response.actionIdentifier == Self.joinAction,
+           let string = response.notification.request.content.userInfo[Self.joinURLKey] as? String,
+           let url = URL(string: string) {
+            DispatchQueue.main.async { NSWorkspace.shared.open(url) }
+        }
         completionHandler()
     }
 }

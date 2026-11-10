@@ -21,12 +21,12 @@ final class AlertTextTests: XCTestCase {
     }
 
     func testBannerBodyWithLocation() {
-        XCTAssertEqual(AlertText.bannerBody(for: meeting(), calendar: utc), "2:00 PM · Conference Room B")
+        XCTAssertEqual(AlertText.bannerSubtitle(for: meeting(), calendar: utc), "2:00 PM · Conference Room B")
     }
 
     func testBannerBodyWithoutLocation() {
-        XCTAssertEqual(AlertText.bannerBody(for: meeting(location: nil), calendar: utc), "2:00 PM")
-        XCTAssertEqual(AlertText.bannerBody(for: meeting(location: "  "), calendar: utc), "2:00 PM")
+        XCTAssertEqual(AlertText.bannerSubtitle(for: meeting(location: nil), calendar: utc), "2:00 PM")
+        XCTAssertEqual(AlertText.bannerSubtitle(for: meeting(location: "  "), calendar: utc), "2:00 PM")
     }
 
     func testTimeRange() {
@@ -75,5 +75,16 @@ final class AlertTextTests: XCTestCase {
             XCTAssertEqual(AlertText.fullScreenAnnouncement(for: m, now: m.start.addingTimeInterval(-60), calendar: utc),
                            "Weekly team sync starts in 1 minute. 2:00 PM to 2:30 PM.")
         }
+    }
+
+    func testAnnouncementMentionsJoin() {
+        let start = base.addingTimeInterval(6 * 3600)
+        let linked = Meeting(id: "m", title: "Weekly team sync", start: start, end: start.addingTimeInterval(1800),
+                             location: "Room B", notes: "https://meet.google.com/abc")
+        XCTAssertEqual(AlertText.fullScreenAnnouncement(for: linked, now: start.addingTimeInterval(-60), calendar: utc),
+                       "Weekly team sync starts in 1 minute. 2:00 PM to 2:30 PM, Room B. Join available.")
+        XCTAssertEqual(AlertText.fullScreenAnnouncement(for: meeting(location: "Room B"),
+                                                        now: start.addingTimeInterval(-60), calendar: utc),
+                       "Weekly team sync starts in 1 minute. 2:00 PM to 2:30 PM, Room B.")
     }
 }

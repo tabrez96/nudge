@@ -4,6 +4,7 @@ import Foundation
 public struct FullScreenContent: Equatable {
     public static let heading = "Starting in"
     public static let buttonTitle = "Got it"
+    public static let joinTitle = "Join"
     public static let hint = "Press Return or Esc to dismiss"
 
     /// "Starting in" above the countdown; nil once the meeting has started, when the countdown reads "Starting now".
@@ -13,12 +14,19 @@ public struct FullScreenContent: Equatable {
     public let title: String
     /// "2:00 PM – 2:30 PM · Conference Room B", or the time range alone.
     public let detail: String
+    /// Cleaned notes shown under the detail (two lines max); nil shows nothing.
+    public let summary: String?
+    /// Link the Join button opens; nil hides the button.
+    public let joinURL: URL?
 
-    public init(heading: String?, countdown: String, title: String, detail: String) {
+    public init(heading: String?, countdown: String, title: String, detail: String,
+                summary: String? = nil, joinURL: URL? = nil) {
         self.heading = heading
         self.countdown = countdown
         self.title = title
         self.detail = detail
+        self.summary = summary
+        self.joinURL = joinURL
     }
 }
 
@@ -47,7 +55,9 @@ public final class FullScreenWarning {
         return FullScreenContent(heading: countdown == "Starting now" ? nil : FullScreenContent.heading,
                                  countdown: countdown,
                                  title: meeting.title,
-                                 detail: AlertText.fullScreenDetail(for: meeting, calendar: calendar))
+                                 detail: AlertText.fullScreenDetail(for: meeting, calendar: calendar),
+                                 summary: meeting.summary,
+                                 joinURL: meeting.joinLink)
     }
 
     /// Nil when nothing is open.

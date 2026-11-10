@@ -177,20 +177,17 @@ final class MenuController: NSObject, NSMenuDelegate, SyncObserving {
             item.setAccessibilityLabel(text)
             return item
         case .meeting(let meeting):
-            let style = NSMutableParagraphStyle()
-            style.tabStops = [NSTextTab(textAlignment: .right, location: Self.menuWidth - 50)]
-            let text = NSMutableAttributedString(
-                string: MenuPresentation.truncated(meeting.title) + "\t",
-                attributes: [.font: NSFont.menuFont(ofSize: 13), .foregroundColor: NSColor.labelColor,
-                             .paragraphStyle: style])
-            let detailAttributes: [NSAttributedString.Key: Any] = meeting.isSoon
-                ? [.font: NSFont.systemFont(ofSize: 13, weight: .bold), .foregroundColor: Self.amber,
-                   .paragraphStyle: style]
-                : [.font: NSFont.menuFont(ofSize: 13), .foregroundColor: NSColor.secondaryLabelColor,
-                   .paragraphStyle: style]
-            text.append(NSAttributedString(string: meeting.detail, attributes: detailAttributes))
-            let item = disabledItem(text)
+            let item = NSMenuItem()
+            item.view = MeetingRowView(row: meeting, width: Self.menuWidth)
             item.setAccessibilityLabel(MenuPresentation.meetingLabel(meeting))
+            if let url = meeting.joinURL {
+                item.target = self
+                item.action = #selector(join(_:))
+                item.representedObject = url
+                item.isEnabled = true
+            } else {
+                item.isEnabled = false
+            }
             return item
         case .message(let text):
             return disabledItem(NSAttributedString(string: text, attributes: [
@@ -231,6 +228,10 @@ final class MenuController: NSObject, NSMenuDelegate, SyncObserving {
         case .allowCalendarAccess: app.fixCalendarAccess()
         case .openInternetAccounts: app.openInternetAccounts()
         }
+    }
+
+    @objc private func join(_ sender: NSMenuItem) {
+        if let url = sender.representedObject as? URL { NSWorkspace.shared.open(url) }
     }
 
     @objc private func chooseCalendar(_ sender: NSMenuItem) {

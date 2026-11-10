@@ -93,4 +93,19 @@ final class FullScreenWarningTests: XCTestCase {
         XCTAssertEqual(w.announcement(now: start.addingTimeInterval(-60), calendar: utc),
                        "Weekly team sync starts in 1 minute. 2:00 PM to 2:30 PM, Conference Room B.")
     }
+
+    func testContentCarriesSummaryAndJoinURL() {
+        let rich = Meeting(id: "a", title: "Sync", start: start, end: start.addingTimeInterval(1800),
+                           location: "Room B", notes: "Agenda: launch\nhttps://meet.google.com/abc")
+        let w = FullScreenWarning()
+        w.show(oneMinute(rich))
+        let content = w.content(now: start.addingTimeInterval(-60), calendar: utc)
+        XCTAssertEqual(content?.summary, "Agenda: launch")
+        XCTAssertEqual(content?.joinURL, URL(string: "https://meet.google.com/abc"))
+
+        w.show(oneMinute(meeting()))
+        let plain = w.content(now: start.addingTimeInterval(-60), calendar: utc)
+        XCTAssertNil(plain?.summary)
+        XCTAssertNil(plain?.joinURL)
+    }
 }

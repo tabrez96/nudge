@@ -49,9 +49,10 @@ public enum MenuPresentation {
         status.dot == .red ? "Problem: \(status.text)" : status.text
     }
 
-    /// VoiceOver label for a meeting row, e.g. "Weekly team sync, in 4 min" or "1:1 with Dana, at 2:30 PM".
+    /// VoiceOver label for a meeting row, e.g. "Weekly team sync, in 4 min", "Standup, until 2:30 PM"
+    /// or "1:1 with Dana, at 2:30 PM".
     public static func meetingLabel(_ row: MeetingRow) -> String {
-        row.isSoon ? "\(row.title), \(row.detail)" : "\(row.title), at \(row.detail)"
+        row.isSoon || row.isNow ? "\(row.title), \(row.detail)" : "\(row.title), at \(row.detail)"
     }
 
     /// Shortens long meeting titles so the right-aligned time still fits: keeps the first

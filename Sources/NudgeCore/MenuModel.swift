@@ -23,15 +23,18 @@ public struct StatusLine: Equatable {
 
 public struct MeetingRow: Equatable {
     public let title: String
-    /// "in 4 min" when soon, else the start time ("2:30 PM").
+    /// "in 4 min" when soon, "until 2:30 PM" when running now, else the start time ("2:30 PM").
     public let detail: String
     /// True when the meeting starts within 5 minutes; S01 draws `detail` in bold amber.
     public let isSoon: Bool
+    /// True when the meeting is running now; listed under the "Now" header.
+    public let isNow: Bool
 
-    public init(title: String, detail: String, isSoon: Bool) {
+    public init(title: String, detail: String, isSoon: Bool, isNow: Bool = false) {
         self.title = title
         self.detail = detail
         self.isSoon = isSoon
+        self.isNow = isNow
     }
 }
 
@@ -78,6 +81,7 @@ public struct MenuModel: Equatable {
 extension MenuModel {
     public static let syncingText = "Syncing…"
     public static let noAccessText = "Nudge can't see your calendar yet."
+    public static let nowHeader = "Now"
     public static let nextMeetingsHeader = "Next meetings"
     public static let lastSavedHeader = "Next meetings (last saved)"
     public static let emptyText = "No more meetings today. Enjoy the quiet."
@@ -89,6 +93,7 @@ extension MenuModel {
         let warningGroup: [MenuRow] = notificationsAllowed ? [] : [.warning(notificationsOffText)]
         let meetingRows: [MenuRow] = upcomingMeetings(meetings, now: now, calendar: calendar)
             .map { .meeting(meetingRow($0, now: now, calendar: calendar)) }
+        let nowRows: [MenuRow] = runningMeetings(meetings, now: now).map { .meeting(nowRow($0, calendar: calendar)) }
         let quitGroup: [MenuRow] = [.action(.quit, title: "Quit Nudge", keyEquivalent: "q")]
 
         switch status {
@@ -112,18 +117,15 @@ extension MenuModel {
                 .action(.testAlerts, title: "Test the alerts", keyEquivalent: nil),
                 .action(.refresh, title: "Refresh now", keyEquivalent: "r"),
             ]
-            if meetingRows.isEmpty {
-                return MenuModel(status: line, icon: icon,
-                                 rows: joined([warningGroup, [.message(emptyText)], controls, quitGroup]))
-            }
+            let group = meetingGroup(now: nowRows, next: meetingRows, nextHeader: nextMeetingsHeader)
             return MenuModel(status: line, icon: icon,
-                             rows: joined([warningGroup, [.header(nextMeetingsHeader)] + meetingRows,
+                             rows: joined([warningGroup, group.isEmpty ? [.message(emptyText)] : group,
                                            controls, quitGroup]))
         case .error(_, let savedAt):
             let text = savedAt.map {
                 "Can't reach your calendar. Alerting from data saved at \(TimeText.clock($0, calendar: calendar))."
             } ?? "Can't reach your calendar. Nothing saved to alert from yet."
-            let list: [MenuRow] = meetingRows.isEmpty ? [] : [.header(lastSavedHeader)] + meetingRows
+            let list = meetingGroup(now: nowRows, next: meetingRows, nextHeader: lastSavedHeader)
             let retry: [MenuRow] = [.action(.retry, title: "Retry now", keyEquivalent: "r")]
             return MenuModel(status: StatusLine(text: text, dot: .red), icon: .problem,
                              rows: joined([warningGroup, list, retry, quitGroup]))
@@ -145,6 +147,25 @@ extension MenuModel {
             rows += group
         }
         return rows
+    }
+
+    /// "Now" section (if any) followed by the next-meetings section (if any), in one group with no separator.
+    static func meetingGroup(now nowRows: [MenuRow], next nextRows: [MenuRow], nextHeader: String) -> [MenuRow] {
+        let nowSection: [MenuRow] = nowRows.isEmpty ? [] : [.header(nowHeader)] + nowRows
+        let nextSection: [MenuRow] = nextRows.isEmpty ? [] : [.header(nextHeader)] + nextRows
+        return nowSection + nextSection
+    }
+
+    /// Meetings in progress at `now` (start <= now < end), earliest start first, at most 3.
+    static func runningMeetings(_ meetings: [Meeting], now: Date) -> [Meeting] {
+        let running = meetings.filter { !$0.isAllDay && !$0.isDeclined && $0.start <= now && now < $0.end }
+        let sorted = running.sorted { ($0.start, $0.id) < ($1.start, $1.id) }
+        return Array(sorted.prefix(3))
+    }
+
+    static func nowRow(_ meeting: Meeting, calendar: Calendar) -> MeetingRow {
+        MeetingRow(title: meeting.title, detail: "until \(TimeText.clock(meeting.end, calendar: calendar))",
+                   isSoon: false, isNow: true)
     }
 
     static func upcomingMeetings(_ meetings: [Meeting], now: Date, calendar: Calendar) -> [Meeting] {

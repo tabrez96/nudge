@@ -208,4 +208,79 @@ final class MenuModelTests: XCTestCase {
         XCTAssertFalse(strings.isEmpty)
         for s in strings where !titles.contains(s) { XCTAssertFalse(s.contains("!"), s) }
     }
+
+    // MARK: Now section
+
+    private func running(_ id: String, start: TimeInterval = -600, end: TimeInterval = 1800,
+                         allDay: Bool = false, declined: Bool = false) -> Meeting {
+        Meeting(id: id, title: id, start: now.addingTimeInterval(start), end: now.addingTimeInterval(end),
+                isAllDay: allDay, isDeclined: declined)
+    }
+
+    private func nowRow(_ id: String, _ detail: String = "until 8:30 AM") -> MenuRow {
+        .meeting(MeetingRow(title: id, detail: detail, isSoon: false, isNow: true))
+    }
+
+    func testRunningMeetingShownUnderNowAboveNextMeetings() {
+        let m = build(.synced(at: now), [running("r"), meeting("u", seconds: 6.5 * 3600)])
+        XCTAssertEqual(m.rows, [
+            .header("Now"),
+            nowRow("r"),
+            .header("Next meetings"),
+            .meeting(MeetingRow(title: "u", detail: "2:30 PM", isSoon: false)),
+            .separator,
+        ] + controls() + [.separator, quit])
+    }
+
+    func testRunningMeetingOnlyHidesEmptyText() {
+        let m = build(.synced(at: now), [running("r")])
+        XCTAssertEqual(Array(m.rows.prefix(2)), [.header("Now"), nowRow("r")])
+        XCTAssertFalse(m.rows.contains(.message(MenuModel.emptyText)))
+        XCTAssertFalse(m.rows.contains(.header("Next meetings")))
+    }
+
+    func testEmptyTextOnlyWhenNothingRunningOrUpcoming() {
+        let m = build(.synced(at: now), [running("done", start: -1800, end: 0)])
+        XCTAssertEqual(m.rows.first, .message(MenuModel.emptyText))
+    }
+
+    func testRunningBoundaries() {
+        let all = [
+            running("starts-now", start: 0),
+            running("ends-now", start: -600, end: 0),
+            running("zero", start: 0, end: 0),
+            running("allday", allDay: true),
+            running("declined", declined: true),
+        ]
+        XCTAssertEqual(MenuModel.runningMeetings(all, now: now).map(\.id), ["starts-now"])
+    }
+
+    func testRunningMeetingNeverSoon() {
+        let row = MenuModel.nowRow(running("r", start: -30), calendar: utc)
+        XCTAssertFalse(row.isSoon)
+        XCTAssertTrue(row.isNow)
+        XCTAssertTrue(row.detail.hasPrefix("until "))
+    }
+
+    func testOverlappingRunningMeetingsSortedAndCapped() {
+        let m = build(.synced(at: now), [running("d", start: -100), running("b", start: -300),
+                                         running("a", start: -400), running("c", start: -200)])
+        XCTAssertEqual(Array(m.rows.prefix(4)), [.header("Now"), nowRow("a"), nowRow("b"), nowRow("c")])
+        XCTAssertEqual(m.rows[4], .separator)
+    }
+
+    func testRunningMeetingFromYesterdayStillShown() {
+        let m = build(.synced(at: now), [running("late", start: -9 * 3600, end: 600)])
+        XCTAssertEqual(Array(m.rows.prefix(2)), [.header("Now"), nowRow("late", "until 8:10 AM")])
+    }
+
+    func testErrorStateShowsNowAboveLastSaved() {
+        let m = build(.error(.fetchFailed, savedAt: now), [running("r"), meeting("u", seconds: 6.5 * 3600)])
+        XCTAssertEqual(Array(m.rows.prefix(4)), [
+            .header("Now"),
+            nowRow("r"),
+            .header("Next meetings (last saved)"),
+            .meeting(MeetingRow(title: "u", detail: "2:30 PM", isSoon: false)),
+        ])
+    }
 }

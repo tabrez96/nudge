@@ -9,5 +9,5 @@ Status: **draft** (UX not approved yet), **approved**, **building** (a ticket fo
 | ID | Screen | Status | Purpose | Tickets | Updated |
 | --- | --- | --- | --- | --- | --- |
 | S01 | [Menu bar menu](screens/S01-menu-bar-menu/screen.html) (+4 states) · [spec](screens/S01-menu-bar-menu/spec.md) | building | Check that Nudge is working, see what's on now and next, join a call, and fix problems | T-6, T-8, T-9, T-11, T-21, T-36, T-52, T-53, T-72, T-76, T-77, T-78, T-79 | 2026-11-11 |
-| S02 | [Full-screen warning](screens/S02-full-screen-warning/screen.html) (+1 states) · [spec](screens/S02-full-screen-warning/spec.md) | building | Make it impossible to miss that a meeting starts in one minute, and get into it in one click | T-6, T-10, T-11, T-77, T-78 | 2026-11-11 |
-| S03 | [Five-minute banner](screens/S03-five-minute-banner/screen.html) (+1 states) · [spec](screens/S03-five-minute-banner/spec.md) | building | Early heads-up with sound, 5 minutes before a meeting | T-6, T-9, T-11, T-77, T-78 | 2026-11-11 |
+| S02 | [Full-screen warning](screens/S02-full-screen-warning/screen.html) (+1 states) · [spec](screens/S02-full-screen-warning/spec.md) | built | Make it impossible to miss that a meeting starts in one minute, and get into it in one click | T-6, T-10, T-11, T-77, T-78 | 2026-11-11 |
+| S03 | [Five-minute banner](screens/S03-five-minute-banner/screen.html) (+1 states) · [spec](screens/S03-five-minute-banner/spec.md) | built | Early heads-up with sound, 5 minutes before a meeting | T-6, T-9, T-11, T-77, T-78 | 2026-11-11 |

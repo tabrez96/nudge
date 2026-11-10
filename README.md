@@ -65,8 +65,8 @@ swift run Nudge    # macOS: starts the menu bar app; Linux: prints a "macOS only
 ```
 
 The app icon is built from `Support/AppIcon/AppIcon-1024.png`, which `scripts/make-icon-master.sh` renders from
-`design/brand/mark.svg` (needs `rsvg-convert`). Rerun it and commit the PNG when the mark changes;
-`scripts/make-app.sh` turns it into `AppIcon.icns`.
+`design/brand/mark.svg` (needs `rsvg-convert`); `scripts/make-app.sh` turns it into `AppIcon.icns`. The `Build`
+workflow installs librsvg and renders it before every build.
 
 Layout:
 - `Sources/NudgeCore` — pure-Foundation logic (timing, sync, display text), tested on Linux.

@@ -27,6 +27,12 @@ jobs:
           xcodebuild -version
           swift --version
 
+      # Render the icon master from design/brand/mark.svg; make-app.sh turns it into AppIcon.icns.
+      - name: Render icon master
+        run: |
+          brew install librsvg
+          scripts/make-icon-master.sh
+
       - name: Build Nudge.app (Release)
         run: scripts/make-app.sh
 

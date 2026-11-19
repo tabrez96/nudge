@@ -62,7 +62,12 @@ are meaningful there.
 swift build        # build everything
 swift test         # run the NudgeCore tests (works on Linux and macOS)
 swift run Nudge    # macOS: starts the menu bar app; Linux: prints a "macOS only" message
+betterleaks git --redact --verbose .   # scan the full git history for secrets (CI fails on any finding)
 ```
+
+CI pins betterleaks 1.10.1 (see `.github/workflows/test.yml`). Install it from the release tarball at
+<https://github.com/betterleaks/betterleaks/releases> or with `brew install --cask betterleaks/tap/betterleaks@1`. The Homebrew cask installs the executable as
+`betterleaks-v1`, so use that name in place of `betterleaks` in the command above; the tarball keeps `betterleaks`.
 
 The app icon is built from `Support/AppIcon/AppIcon-1024.png`, which `scripts/make-icon-master.sh` renders from
 `design/brand/mark.svg` (needs `rsvg-convert`); `scripts/make-app.sh` turns it into `AppIcon.icns`. The `Build`
